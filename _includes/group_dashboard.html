@@ -1,0 +1,1295 @@
+<!-- Group Dashboard Template -->
+<!-- Usage: include group_dashboard.html groupName="My Group" groupId="123" -->
+
+<div class="min-h-screen bg-neutral-900 py-10">
+  <div class="max-w-6xl mx-auto px-4">
+    
+    <!-- Back Navigation -->
+    <a href="{{ site.baseurl }}/student/groups" class="inline-flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+      <span>Back to Groups</span>
+    </a>
+
+    <!-- Dashboard Header -->
+    <div class="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-6 mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h1 id="dashboardGroupName" class="text-2xl font-bold text-white">{{ include.groupName | default: "Group Dashboard" }}</h1>
+          <p id="dashboardGroupMeta" class="text-gray-400 mt-1">Period · Class · Members</p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="openGroupChatFromDashboard()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            Open Chat
+          </button>
+          <button onclick="refreshDashboard()" class="px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar Section -->
+    <div class="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          Group Calendar
+        </h2>
+        <div class="flex gap-2">
+          <button onclick="previousMonth()" class="p-2 hover:bg-neutral-700 rounded-lg transition-colors" title="Previous month">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <span id="currentMonth" class="px-4 py-2 text-white font-medium min-w-fit">January 2026</span>
+          <button onclick="nextMonth()" class="p-2 hover:bg-neutral-700 rounded-lg transition-colors" title="Next month">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Calendar Grid -->
+        <div class="lg:col-span-2">
+          <!-- Day headers -->
+          <div class="grid grid-cols-7 gap-2 mb-2">
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Sun</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Mon</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Tue</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Wed</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Thu</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Fri</div>
+            <div class="text-center text-gray-500 text-sm font-medium py-2">Sat</div>
+          </div>
+          
+          <!-- Calendar days -->
+          <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+            <!-- Populated by JavaScript -->
+          </div>
+        </div>
+
+        <!-- Today's Events Sidebar -->
+        <div class="bg-neutral-700/50 border border-neutral-600 rounded-lg p-4">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Today's Items</h3>
+          <div id="todayEvents" class="space-y-3">
+            <p class="text-gray-500 text-sm">No events scheduled for today</p>
+          </div>
+          <button onclick="openAddEventModal()" class="mt-4 w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
+            + Add Item
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Member Analytics Section (2 columns) -->
+      <div class="lg:col-span-2 bg-neutral-800 border border-neutral-700 rounded-lg shadow-md">
+        <div class="p-4 border-b border-neutral-700">
+          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            Member Analytics
+          </h2>
+        </div>
+        
+        <div class="p-4">
+          <!-- Members Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="text-left text-gray-400 border-b border-neutral-700">
+                  <th class="pb-3 font-medium">Member</th>
+                  <th class="pb-3 font-medium">Messages</th>
+                </tr>
+              </thead>
+              <tbody id="memberAnalyticsBody" class="text-gray-300">
+                <!-- Will be populated dynamically -->
+                <tr>
+                  <td colspan="2" class="py-8 text-center text-gray-400">
+                    No members in this group
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Stats Sidebar -->
+      <div class="space-y-6">
+        <!-- Group Stats Card -->
+        <div class="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-4">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Group Stats</h3>
+          <div class="space-y-4">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400">Total Members</span>
+              <span id="statTotalMembers" class="text-white font-semibold">0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400">Total Messages</span>
+              <span id="statTotalMessages" class="text-white font-semibold">0</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400">Files Shared</span>
+              <span id="statTotalFiles" class="text-white font-semibold">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Chart Placeholder -->
+        <div class="bg-neutral-800 border border-neutral-700 rounded-lg shadow-md p-4">
+          <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Weekly Activity</h3>
+          <div class="h-32 flex items-end justify-between gap-1 px-2">
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 40%"></div>
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 65%"></div>
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 45%"></div>
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 80%"></div>
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 55%"></div>
+            <div class="flex-1 bg-indigo-600/60 rounded-t" style="height: 90%"></div>
+            <div class="flex-1 bg-indigo-600 rounded-t" style="height: 70%"></div>
+          </div>
+          <div class="flex justify-between text-xs text-gray-500 mt-2 px-1">
+            <span>Mon</span>
+            <span>Tue</span>
+            <span>Wed</span>
+            <span>Thu</span>
+            <span>Fri</span>
+            <span>Sat</span>
+            <span>Sun</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Files Section -->
+    <div class="mt-6 bg-neutral-800 border border-neutral-700 rounded-lg shadow-md">
+      <div class="p-4 border-b border-neutral-700 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-white flex items-center gap-2">
+          <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
+          Shared Files
+        </h2>
+        <div class="flex items-center gap-4">
+          <span id="sharedFileCount" class="text-sm text-gray-400">0 files</span>
+          <button onclick="document.getElementById('sharedFileInputDashboard').click()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Add File
+          </button>
+          <input type="file" id="sharedFileInputDashboard" class="hidden" onchange="handleSharedFileUpload(event)" />
+        </div>
+      </div>
+      
+      <div class="p-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="sharedFilesGrid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Event Modal -->
+<div id="eventModal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+  <div class="bg-neutral-800 border border-neutral-700 rounded-lg shadow-lg p-6 w-full max-w-md">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-white">Add/Edit Event</h3>
+      <button onclick="closeEventModal()" class="text-gray-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Event Title</label>
+        <input id="eventTitle" type="text" placeholder="Enter event title" class="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Date</label>
+        <input id="eventDate" type="date" class="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-gray-400 mb-2">Description</label>
+        <textarea id="eventDescription" placeholder="Add event details..." class="w-full px-3 py-2 bg-neutral-700 border border-neutral-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none" rows="3"></textarea>
+      </div>
+      
+      <div class="flex gap-2 pt-2">
+        <button onclick="saveEvent()" class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors font-medium">
+          Save Event
+        </button>
+        <button onclick="closeEventModal()" class="flex-1 px-4 py-2 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chat Modal -->
+<div id="chatModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black bg-opacity-75" onclick="closeGroupChat()"></div>
+
+  <!-- Modal Content -->
+  <div class="relative bg-neutral-800 rounded-lg shadow-2xl w-full max-w-2xl mx-4 flex flex-col" style="height: 600px;">
+    <!-- Header -->
+    <div class="flex items-center justify-between p-4 border-b border-neutral-700">
+      <div>
+        <h3 id="chatModalTitle" class="text-xl font-semibold text-white">Group Chat</h3>
+        <p id="chatModalSubtitle" class="text-sm text-gray-400">Period · Class · Members</p>
+      </div>
+      <button onclick="closeGroupChat()" class="text-gray-400 hover:text-white transition-colors">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex items-center gap-2 px-4 py-2 border-b border-neutral-700">
+      <button id="chatTabButton"
+        class="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white"
+        onclick="showChatTab()">Chat</button>
+      <button id="filesTabButton"
+        class="px-3 py-1.5 text-sm rounded-lg text-gray-300 hover:bg-neutral-700"
+        onclick="showFilesTab()">Shared Files</button>
+    </div>
+
+    <div class="flex-1 flex flex-col min-h-0">
+      <!-- Chat Panel -->
+      <div id="chatPanel" class="flex-1 flex flex-col min-h-0">
+        <!-- Chat Messages Area -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-4">
+          <div id="chatEmptyState" class="text-center text-gray-500 text-sm py-6">No messages yet.</div>
+        </div>
+
+        <!-- Message Input Area -->
+        <div class="p-4 border-t border-neutral-700 relative">
+          <!-- Slash Command Popup -->
+          <div id="slashCommandPopup" class="hidden absolute bottom-full left-4 right-4 mb-2 bg-neutral-700 border border-neutral-600 rounded-lg shadow-lg overflow-hidden">
+            <div class="p-2 text-xs text-gray-400 border-b border-neutral-600">Commands</div>
+            <div id="slashCommandList">
+              <div class="slash-command-item px-3 py-2 hover:bg-neutral-600 cursor-pointer flex items-center gap-3" onclick="selectSlashCommand('/calendar')">
+                <span class="text-lg">📅</span>
+                <div>
+                  <div class="text-white text-sm font-medium">/calendar</div>
+                  <div class="text-gray-400 text-xs">Add a calendar event or reminder</div>
+                </div>
+              </div>
+              <div class="slash-command-item px-3 py-2 hover:bg-neutral-600 cursor-pointer flex items-center gap-3" onclick="selectSlashCommand('/adduser')">
+                <span class="text-lg">👤</span>
+                <div>
+                  <div class="text-white text-sm font-medium">/adduser</div>
+                  <div class="text-gray-400 text-xs">Add a user to the conversation</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="imageMessageBox" class="mt-4 mb-4"></div>
+          <div class="flex items-center gap-2">
+            <input
+              type="text"
+              id="chatInput"
+              placeholder="Message #group-name"
+              class="flex-1 px-4 py-3 bg-neutral-700 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+              onkeydown="handleChatInputKeydown(event)"
+              oninput="handleChatInputChange(event)"
+            />
+            <input id="chatImageInput" type="file" accept="image/*" class="hidden" onchange="handleChatImageSelected(event)" />
+            <button
+              class="w-12 h-12 flex items-center justify-center bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
+              title="Attach image"
+              onclick="triggerChatImagePicker()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828L18 9a4 4 0 10-5.657-5.657L6.343 9.343a6 6 0 108.485 8.485L20 12"></path>
+              </svg>
+            </button>
+            <button
+              class="w-12 h-12 flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors"
+              title="Send message"
+              onclick="sendChatMessage()">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shared Files Panel -->
+      <div id="filesPanel" class="hidden flex-1 flex flex-col min-h-0">
+        <div id="sharedFilesList" class="flex-1 overflow-y-auto p-4 space-y-3">
+          <div id="filesEmptyState" class="text-center text-gray-500 text-sm py-6">No files uploaded yet.</div>
+        </div>
+        <div class="p-4 border-t border-neutral-700">
+          <div class="flex items-center gap-2">
+            <input id="sharedFileInput" type="file"
+              class="flex-1 px-3 py-2 bg-neutral-700 text-white placeholder-gray-500 rounded-lg border border-neutral-600" />
+            <button
+              class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition-colors"
+              onclick="uploadSharedFile()">Upload</button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Uploads are shared with all group members.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Dashboard-specific styles */
+  .dashboard-card {
+    @apply bg-neutral-800 border border-neutral-700 rounded-lg shadow-md;
+  }
+  
+  .calendar-day {
+    @apply min-h-24 p-2 rounded-lg border transition-colors cursor-pointer;
+  }
+  
+  .calendar-day.other-month {
+    @apply bg-neutral-700/30 border-neutral-700 text-gray-500;
+  }
+  
+  .calendar-day.current-month {
+    @apply bg-neutral-700/50 border-neutral-600 text-gray-300 hover:bg-neutral-700;
+  }
+  
+  .calendar-day.today {
+    @apply border-indigo-500 bg-indigo-500/10;
+  }
+  
+  .calendar-day.has-events {
+    @apply border-indigo-400;
+  }
+  
+  .event-badge {
+    @apply inline-block px-2 py-1 text-xs rounded bg-indigo-600 text-white truncate mb-1;
+  }
+
+  /* Chat Modal Scrollbar Styling */
+  #chatMessages::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  #chatMessages::-webkit-scrollbar-track {
+    background: #262626;
+    border-radius: 4px;
+  }
+
+  #chatMessages::-webkit-scrollbar-thumb {
+    background: #525252;
+    border-radius: 4px;
+  }
+
+  #chatMessages::-webkit-scrollbar-thumb:hover {
+    background: #737373;
+  }
+
+  /* Prevent body scroll when modal is open */
+  body.modal-open {
+    overflow: hidden;
+  }
+
+  /* Slash command input styling */
+  #chatInput.has-command {
+    background: linear-gradient(90deg, rgba(99, 102, 241, 0.2) 0%, rgba(64, 64, 64, 1) 30%);
+    border: 1px solid rgba(99, 102, 241, 0.5);
+  }
+
+  /* Slash command popup animation */
+  #slashCommandPopup {
+    animation: slideUp 0.15s ease-out;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<script type="module">
+  import { javaURI, pythonURI, fetchOptions } from '{{site.baseurl}}/assets/js/api/config.js';
+  // Calendar state
+  let currentDate = new Date(2026, 0, 5); // February 5, 2026
+  let calendarEvents = JSON.parse(localStorage.getItem('calendarEvents') || '{}');
+  let selectedEventDate = null;
+
+  // Chat state
+  const dashboardGroupId = "{{ include.groupId | default: '' }}";
+  let activeChatGroupId = dashboardGroupId ? Number(dashboardGroupId) : null;
+  let activeChatGroupName = '';
+  let chatPollTimer = null;
+  let currentUser = null;
+  let currentUserDisplayName = 'You';
+  let pendingChatImageBase64 = null;
+  let pendingChatImageMime = 'image/png';
+  
+  // Initialize calendar
+  document.addEventListener('DOMContentLoaded', () => {
+    renderCalendar();
+    updateTodayEvents();
+    initializeChatUser();
+  });
+
+  async function initializeChatUser() {
+    try {
+      const res = await fetch(`${pythonURI}/api/id`, fetchOptions);
+      if (!res.ok) return;
+      const user = await res.json();
+      currentUser = user || null;
+      currentUserDisplayName = user?.name || user?.uid || user?.github || 'You';
+    } catch (err) {
+      console.warn('User lookup failed', err);
+    }
+  }
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Update month display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    const calendarGrid = document.getElementById('calendarGrid');
+    calendarGrid.innerHTML = '';
+    
+    // Previous month's days
+    for (let i = firstDay - 1; i >= 0; i--) {
+      const day = daysInPrevMonth - i;
+      const dayElement = createDayElement(day, false, new Date(year, month - 1, day));
+      dayElement.classList.add('other-month');
+      calendarGrid.appendChild(dayElement);
+    }
+    
+    // Current month's days
+    const today = new Date();
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dayElement = createDayElement(day, true, date);
+      dayElement.classList.add('current-month');
+      
+      // Highlight today
+      if (date.toDateString() === today.toDateString()) {
+        dayElement.classList.add('today');
+      }
+      
+      calendarGrid.appendChild(dayElement);
+    }
+    
+    // Next month's days
+    const totalCells = calendarGrid.children.length;
+    const remainingCells = 42 - totalCells;
+    for (let day = 1; day <= remainingCells; day++) {
+      const dayElement = createDayElement(day, false, new Date(year, month + 1, day));
+      dayElement.classList.add('other-month');
+      calendarGrid.appendChild(dayElement);
+    }
+  }
+
+  function createDayElement(day, isCurrentMonth, date) {
+    const dayElement = document.createElement('div');
+    dayElement.className = 'calendar-day';
+    
+    const dateStr = formatDate(date);
+    const dayEvents = calendarEvents[dateStr] || [];
+    
+    if (dayEvents.length > 0) {
+      dayElement.classList.add('has-events');
+    }
+    
+    let html = `<div class="font-semibold text-sm mb-1">${day}</div>`;
+    
+    // Show first 2 events
+    dayEvents.slice(0, 2).forEach(event => {
+      html += `<div class="event-badge">${event.title}</div>`;
+    });
+    
+    if (dayEvents.length > 2) {
+      html += `<div class="text-xs text-indigo-400">+${dayEvents.length - 2} more</div>`;
+    }
+    
+    dayElement.innerHTML = html;
+    dayElement.onclick = () => selectDate(date);
+    
+    return dayElement;
+  }
+
+  function selectDate(date) {
+    selectedEventDate = date;
+    const dateStr = formatDate(date);
+    const events = calendarEvents[dateStr] || [];
+    
+    // Update today's events display
+    const todayEventsDiv = document.getElementById('todayEvents');
+    if (events.length === 0) {
+      todayEventsDiv.innerHTML = `<p class="text-gray-500 text-sm">No events on ${date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}</p>`;
+    } else {
+      todayEventsDiv.innerHTML = events.map((event, index) => `
+        <div class="bg-neutral-600/50 border border-neutral-500 rounded p-3 group hover:bg-neutral-600">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex-1 min-w-0">
+              <p class="text-white text-sm font-medium">${event.title}</p>
+              <p class="text-gray-400 text-xs mt-1">${event.description || 'No description'}</p>
+            </div>
+            <button onclick="deleteEvent('${dateStr}', ${index})" class="text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function previousMonth() {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  }
+
+  function openAddEventModal() {
+    if (!selectedEventDate) {
+      alert('Please select a date first');
+      return;
+    }
+    document.getElementById('eventDate').value = formatDate(selectedEventDate);
+    document.getElementById('eventTitle').value = '';
+    document.getElementById('eventDescription').value = '';
+    document.getElementById('eventModal').classList.remove('hidden');
+    document.getElementById('eventTitle').focus();
+  }
+
+  function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+  }
+
+  function saveEvent() {
+    const title = document.getElementById('eventTitle').value.trim();
+    const dateStr = document.getElementById('eventDate').value;
+    const description = document.getElementById('eventDescription').value.trim();
+    
+    if (!title) {
+      alert('Please enter an event title');
+      return;
+    }
+    
+    if (!dateStr) {
+      alert('Please select a date');
+      return;
+    }
+    
+    if (!calendarEvents[dateStr]) {
+      calendarEvents[dateStr] = [];
+    }
+    
+    calendarEvents[dateStr].push({
+      title: title,
+      description: description,
+      timestamp: new Date().toISOString()
+    });
+    
+    localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+    closeEventModal();
+    renderCalendar();
+    
+    // Update selected date view if it matches
+    const selectedDateStr = selectedEventDate ? formatDate(selectedEventDate) : null;
+    if (selectedDateStr === dateStr) {
+      selectDate(new Date(dateStr));
+    }
+  }
+
+  function deleteEvent(dateStr, index) {
+    if (confirm('Delete this event?')) {
+      calendarEvents[dateStr].splice(index, 1);
+      if (calendarEvents[dateStr].length === 0) {
+        delete calendarEvents[dateStr];
+      }
+      localStorage.setItem('calendarEvents', JSON.stringify(calendarEvents));
+      renderCalendar();
+      selectDate(new Date(dateStr));
+    }
+  }
+
+  function updateTodayEvents() {
+    const today = new Date(2026, 0, 5); // February 5, 2026
+    selectDate(today);
+  }
+
+  function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // ================================
+  // CHAT FUNCTIONALITY
+  // ================================
+  const slashCommands = ['/calendar', '/adduser'];
+  let selectedCommandIndex = 0;
+
+  function formatTimestamp(isoString) {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function setChatImagePreview(base64, mimeType = 'image/png') {
+    pendingChatImageBase64 = base64;
+    pendingChatImageMime = mimeType;
+    const messageBox = document.getElementById('imageMessageBox');
+    messageBox.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = `data:${mimeType};base64,${base64}`;
+    img.alt = 'Selected image';
+    img.className = 'mt-2 max-w-xs rounded-lg border border-neutral-700';
+    messageBox.appendChild(img);
+  }
+
+  function clearChatImagePreview() {
+    pendingChatImageBase64 = null;
+    pendingChatImageMime = 'image/png';
+    const messageBox = document.getElementById('imageMessageBox');
+    messageBox.innerHTML = '';
+  }
+
+  window.triggerChatImagePicker = function () {
+    const input = document.getElementById('chatImageInput');
+    if (input) input.click();
+  };
+
+  window.handleChatImageSelected = async function (event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      const base64 = await fileToBase64(file);
+      setChatImagePreview(base64, file.type || 'image/png');
+    } catch (err) {
+      console.error('Failed to read image', err);
+    }
+  };
+
+  window.handlePastedChatImage = async function (event) {
+    const items = (event.clipboardData || window.clipboardData)?.items || [];
+    const imageItem = Array.from(items).find(item => item.type.startsWith('image/'));
+    if (!imageItem) return;
+    const imageFile = imageItem.getAsFile();
+    if (!imageFile) return;
+    try {
+      const base64 = await fileToBase64(imageFile);
+      setChatImagePreview(base64, imageFile.type || 'image/png');
+    } catch (err) {
+      console.error('Image paste failed', err);
+    }
+  };
+
+  function renderChatMessages(messages) {
+    const chatMessages = document.getElementById('chatMessages');
+    let emptyState = document.getElementById('chatEmptyState');
+    chatMessages.innerHTML = '';
+
+    if (!emptyState) {
+      emptyState = document.createElement('div');
+      emptyState.id = 'chatEmptyState';
+      emptyState.className = 'text-center text-gray-500 text-sm py-6';
+      emptyState.textContent = 'No messages yet.';
+    }
+
+    if (!messages || messages.length === 0) {
+      chatMessages.appendChild(emptyState);
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+    messages.forEach(msg => {
+      const wrapper = document.createElement('div');
+
+      const header = document.createElement('div');
+      header.className = 'flex items-baseline gap-2 mb-1';
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'text-white font-semibold text-sm';
+      nameEl.textContent = msg.name === currentUserDisplayName ? 'You' : (msg.name || 'Unknown');
+
+      const timeEl = document.createElement('span');
+      timeEl.className = 'text-gray-500 text-xs';
+      timeEl.textContent = formatTimestamp(msg.date);
+
+      header.appendChild(nameEl);
+      header.appendChild(timeEl);
+      wrapper.appendChild(header);
+
+      if (msg.message) {
+        const textEl = document.createElement('p');
+        textEl.className = 'text-gray-200 text-sm';
+        textEl.textContent = msg.message;
+        wrapper.appendChild(textEl);
+      }
+
+      if (msg.image) {
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${msg.image}`;
+        img.alt = 'Shared image';
+        img.className = 'mt-2 max-w-xs rounded-lg border border-neutral-700';
+        wrapper.appendChild(img);
+      }
+
+      chatMessages.appendChild(wrapper);
+    });
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  async function fetchChatMessages() {
+    if (!activeChatGroupId) return;
+    try {
+      const res = await fetch(`${javaURI}/api/groups/chat/${activeChatGroupId}/messages`, fetchOptions);
+      if (!res.ok) throw new Error('Failed to load chat messages');
+      const messages = await res.json();
+      renderChatMessages(messages);
+    } catch (err) {
+      console.error('Chat fetch failed', err);
+    }
+  }
+
+  window.sendChatMessage = async function () {
+    if (!activeChatGroupId) {
+      console.warn('Chat group not resolved yet');
+      return;
+    }
+    const chatInput = document.getElementById('chatInput');
+    const text = chatInput.value.trim();
+    const image = pendingChatImageBase64 || null;
+
+    if (!text && !image) return;
+
+    const payload = {
+      name: currentUserDisplayName,
+      message: text,
+      date: new Date().toISOString(),
+      image: image
+    };
+
+    try {
+      const res = await fetch(`${javaURI}/api/groups/chat/${activeChatGroupId}/messages`, {
+        ...fetchOptions,
+        method: 'POST',
+        headers: {
+          ...(fetchOptions.headers || {}),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('Failed to send message');
+      const messages = await res.json();
+      renderChatMessages(messages);
+      chatInput.value = '';
+      clearChatImagePreview();
+    } catch (err) {
+      console.error('Send message failed', err);
+    }
+  };
+
+  function startChatPolling() {
+    if (chatPollTimer) clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(fetchChatMessages, 4000);
+  }
+
+  function stopChatPolling() {
+    if (chatPollTimer) {
+      clearInterval(chatPollTimer);
+      chatPollTimer = null;
+    }
+  }
+
+  function downloadBase64File(filename, base64Data) {
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function isImageFile(filename) {
+    return /\.(png|jpe?g|gif)$/i.test(filename || '');
+  }
+
+  function getImageMimeType(filename) {
+    if (/\.jpe?g$/i.test(filename)) return 'image/jpeg';
+    if (/\.gif$/i.test(filename)) return 'image/gif';
+    return 'image/png';
+  }
+
+  function renderSharedFiles(files) {
+    const list = document.getElementById('sharedFilesList');
+    let emptyState = document.getElementById('filesEmptyState');
+    list.innerHTML = '';
+
+    if (!emptyState) {
+      emptyState = document.createElement('div');
+      emptyState.id = 'filesEmptyState';
+      emptyState.className = 'text-center text-gray-500 text-sm py-6';
+      emptyState.textContent = 'No files uploaded yet.';
+    }
+
+    if (!files || files.length === 0) {
+      list.appendChild(emptyState);
+      emptyState.classList.remove('hidden');
+      return;
+    }
+
+    emptyState.classList.add('hidden');
+    files.forEach(file => {
+      const card = document.createElement('div');
+      card.className = 'bg-neutral-700 border border-neutral-600 rounded-lg p-3 flex items-center gap-3';
+
+      if (isImageFile(file.filename)) {
+        const img = document.createElement('img');
+        const mime = getImageMimeType(file.filename);
+        img.src = `data:${mime};base64,${file.base64Data}`;
+        img.alt = file.filename;
+        img.className = 'w-12 h-12 object-cover rounded-md border border-neutral-600';
+        card.appendChild(img);
+      } else {
+        const icon = document.createElement('div');
+        icon.className = 'w-12 h-12 flex items-center justify-center bg-neutral-800 rounded-md text-gray-400 text-sm';
+        icon.textContent = 'FILE';
+        card.appendChild(icon);
+      }
+
+      const info = document.createElement('div');
+      info.className = 'flex-1';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'text-white text-sm font-medium';
+      nameEl.textContent = file.filename;
+      info.appendChild(nameEl);
+      card.appendChild(info);
+
+      const downloadBtn = document.createElement('button');
+      downloadBtn.className = 'px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg';
+      downloadBtn.textContent = 'Download';
+      downloadBtn.addEventListener('click', () => downloadBase64File(file.filename, file.base64Data));
+      card.appendChild(downloadBtn);
+
+      list.appendChild(card);
+    });
+  }
+
+  async function fetchSharedFiles() {
+    if (!activeChatGroupId) return;
+    try {
+      const res = await fetch(`${javaURI}/api/groups/chat/${activeChatGroupId}/files`, fetchOptions);
+      if (!res.ok) throw new Error('Failed to load shared files');
+      const files = await res.json();
+      renderSharedFiles(files);
+    } catch (err) {
+      console.error('Shared files fetch failed', err);
+    }
+  }
+
+  window.uploadSharedFile = async function () {
+    if (!activeChatGroupId) return;
+    const input = document.getElementById('sharedFileInput');
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const base64Data = await fileToBase64(file);
+      const payload = { filename: file.name, base64Data };
+
+      const res = await fetch(`${javaURI}/api/groups/chat/${activeChatGroupId}/files`, {
+        ...fetchOptions,
+        method: 'POST',
+        headers: {
+          ...(fetchOptions.headers || {}),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('Failed to upload file');
+      input.value = '';
+      await fetchSharedFiles();
+    } catch (err) {
+      console.error('Upload failed', err);
+    }
+  };
+
+  window.showChatTab = function () {
+    document.getElementById('chatPanel').classList.remove('hidden');
+    document.getElementById('filesPanel').classList.add('hidden');
+    document.getElementById('chatTabButton').className = 'px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white';
+    document.getElementById('filesTabButton').className = 'px-3 py-1.5 text-sm rounded-lg text-gray-300 hover:bg-neutral-700';
+  };
+
+  window.showFilesTab = function () {
+    document.getElementById('filesPanel').classList.remove('hidden');
+    document.getElementById('chatPanel').classList.add('hidden');
+    document.getElementById('filesTabButton').className = 'px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white';
+    document.getElementById('chatTabButton').className = 'px-3 py-1.5 text-sm rounded-lg text-gray-300 hover:bg-neutral-700';
+    fetchSharedFiles();
+  };
+
+  async function resolveActiveGroupId(groupName) {
+    if (activeChatGroupId) return activeChatGroupId;
+    if (dashboardGroupId) {
+      activeChatGroupId = Number(dashboardGroupId);
+      return activeChatGroupId;
+    }
+
+    const searchUrl = `${javaURI}/api/groups/search?name=${encodeURIComponent(groupName)}`;
+    const res = await fetch(searchUrl, fetchOptions);
+    if (!res.ok) throw new Error('Group lookup failed');
+    const results = await res.json();
+    const match = Array.isArray(results)
+      ? results.find(g => g.name?.toLowerCase() === groupName.toLowerCase()) || results[0]
+      : results;
+
+    if (!match?.id) throw new Error('Group ID not found');
+    activeChatGroupId = match.id;
+    return activeChatGroupId;
+  }
+
+  window.openGroupChatFromDashboard = async function () {
+    const groupName = document.getElementById('dashboardGroupName').textContent || 'Group';
+    const groupMeta = document.getElementById('dashboardGroupMeta').textContent || '';
+
+    activeChatGroupName = groupName;
+
+    document.getElementById('chatModalTitle').textContent = groupName;
+    document.getElementById('chatModalSubtitle').textContent = groupMeta;
+
+    const chatInput = document.getElementById('chatInput');
+    const groupNameFormatted = groupName.toLowerCase().replace(/\s+/g, '-');
+    chatInput.placeholder = `Message #${groupNameFormatted}`;
+
+    document.getElementById('chatModal').classList.remove('hidden');
+    document.body.classList.add('modal-open');
+
+    showChatTab();
+    clearChatImagePreview();
+
+    try {
+      await resolveActiveGroupId(groupName);
+      await fetchChatMessages();
+      await fetchSharedFiles();
+      startChatPolling();
+    } catch (err) {
+      console.error('Failed to open chat', err);
+    }
+  };
+
+  window.closeGroupChat = function () {
+    document.getElementById('chatModal').classList.add('hidden');
+    document.body.classList.remove('modal-open');
+    stopChatPolling();
+    activeChatGroupId = null;
+    activeChatGroupName = '';
+    clearChatImagePreview();
+  };
+
+  function handleChatInputChange(event) {
+    const input = event.target;
+    const value = input.value;
+    const popup = document.getElementById('slashCommandPopup');
+
+    if (value.startsWith('/') && !value.includes(' ')) {
+      const filter = value.toLowerCase();
+      const items = document.querySelectorAll('.slash-command-item');
+      let visibleCount = 0;
+
+      items.forEach(item => {
+        const command = item.querySelector('.text-white').textContent.toLowerCase();
+        if (command.startsWith(filter)) {
+          item.classList.remove('hidden');
+          visibleCount++;
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+
+      if (visibleCount > 0) {
+        popup.classList.remove('hidden');
+        selectedCommandIndex = 0;
+        updateCommandSelection();
+      } else {
+        popup.classList.add('hidden');
+      }
+    } else {
+      popup.classList.add('hidden');
+    }
+  }
+
+  function handleChatInputKeydown(event) {
+    const popup = document.getElementById('slashCommandPopup');
+    const isPopupVisible = !popup.classList.contains('hidden');
+
+    if (isPopupVisible) {
+      const visibleItems = Array.from(document.querySelectorAll('.slash-command-item:not(.hidden)'));
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        selectedCommandIndex = Math.min(selectedCommandIndex + 1, visibleItems.length - 1);
+        updateCommandSelection();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        selectedCommandIndex = Math.max(selectedCommandIndex - 1, 0);
+        updateCommandSelection();
+      } else if (event.key === 'Enter' || event.key === 'Tab') {
+        event.preventDefault();
+        const selectedItem = visibleItems[selectedCommandIndex];
+        if (selectedItem) {
+          const command = selectedItem.querySelector('.text-white').textContent;
+          selectSlashCommand(command);
+        }
+      } else if (event.key === 'Escape') {
+        popup.classList.add('hidden');
+      }
+    } else if (event.key === 'Enter') {
+      window.sendChatMessage();
+    }
+  }
+
+  function updateCommandSelection() {
+    const items = document.querySelectorAll('.slash-command-item:not(.hidden)');
+    items.forEach((item, index) => {
+      if (index === selectedCommandIndex) {
+        item.classList.add('bg-neutral-600');
+      } else {
+        item.classList.remove('bg-neutral-600');
+      }
+    });
+  }
+
+  function selectSlashCommand(command) {
+    const input = document.getElementById('chatInput');
+    const popup = document.getElementById('slashCommandPopup');
+
+    input.value = command + ' ';
+    popup.classList.add('hidden');
+    input.focus();
+    highlightCommand(input);
+  }
+
+  function highlightCommand(input) {
+    const value = input.value;
+    const commandMatch = value.match(/^\/\w+/);
+
+    if (commandMatch) {
+      input.classList.add('has-command');
+    } else {
+      input.classList.remove('has-command');
+    }
+  }
+
+  window.handleChatInputChange = handleChatInputChange;
+  window.handleChatInputKeydown = handleChatInputKeydown;
+  window.selectSlashCommand = selectSlashCommand;
+  window.previousMonth = previousMonth;
+  window.nextMonth = nextMonth;
+  window.openAddEventModal = openAddEventModal;
+  window.closeEventModal = closeEventModal;
+  window.saveEvent = saveEvent;
+  window.deleteEvent = deleteEvent;
+  window.refreshDashboard = refreshDashboard;
+  window.downloadBase64File = downloadBase64File;
+  window.handleSharedFileUpload = handleSharedFileUpload;
+  window.fetchDashboardSharedFiles = fetchDashboardSharedFiles;
+
+  document.addEventListener('paste', function(event) {
+    if (document.getElementById('chatModal').classList.contains('hidden')) return;
+    if (typeof window.handlePastedChatImage === 'function') {
+      window.handlePastedChatImage(event);
+    }
+  });
+
+  // ================================
+  // DASHBOARD SHARED FILES
+  // ================================
+  async function fetchDashboardSharedFiles() {
+    const groupId = window.currentDashboardGroupId || dashboardGroupId;
+    if (!groupId) {
+      console.warn('No group ID available for fetching shared files');
+      return;
+    }
+    
+    try {
+      const res = await fetch(`${javaURI}/api/groups/chat/${groupId}/files`, fetchOptions);
+      if (!res.ok) throw new Error('Failed to load shared files');
+      const files = await res.json();
+      renderDashboardSharedFiles(files);
+    } catch (err) {
+      console.error('Shared files fetch failed', err);
+      renderDashboardSharedFiles([]);
+    }
+  }
+
+  function renderDashboardSharedFiles(files) {
+    const grid = document.getElementById('sharedFilesGrid');
+    const fileCount = document.getElementById('sharedFileCount');
+    
+    grid.innerHTML = '';
+
+    if (!files || files.length === 0) {
+      grid.innerHTML = '<p class="text-gray-500 text-sm col-span-full text-center py-6">No files shared yet</p>';
+      fileCount.textContent = '0 files';
+      return;
+    }
+
+    fileCount.textContent = `${files.length} file${files.length !== 1 ? 's' : ''}`;
+
+    files.forEach(file => {
+      const card = document.createElement('div');
+      card.className = 'bg-neutral-700/50 border border-neutral-600 rounded-lg p-4 hover:bg-neutral-700 transition-colors';
+
+      const isImage = isImageFile(file.filename);
+      let html = '<div class="flex items-start gap-3">';
+
+      if (isImage) {
+        const mimeType = getImageMimeType(file.filename);
+        html += `<img src="data:${mimeType};base64,${file.base64Data}" alt="${file.filename}" class="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-neutral-600" />`;
+      } else {
+        const colorClass = getFileIconColorClass(file.filename);
+        html += `<div class="w-10 h-10 bg-${colorClass}/20 rounded-lg flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-${colorClass}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>`;
+      }
+
+      const fileSizeKB = (file.base64Data.length / 4 * 3 / 1024).toFixed(1);
+      html += `<div class="min-w-0 flex-1 cursor-pointer" onclick="downloadBase64File('${file.filename}', '${file.base64Data}')">
+        <p class="text-white text-sm font-medium truncate hover:text-indigo-400 transition-colors">${file.filename}</p>
+        <p class="text-gray-500 text-xs">${fileSizeKB} KB</p>
+      </div></div>`;
+
+      card.innerHTML = html;
+      grid.appendChild(card);
+    });
+  }
+
+  function getFileIconColorClass(filename) {
+    if (/\.pdf$/i.test(filename)) return 'blue';
+    if (/\.(jpg|jpeg|png|gif)$/i.test(filename)) return 'green';
+    if (/\.(py|js|ts|java|cpp|c)$/i.test(filename)) return 'yellow';
+    if (/\.(xlsx|xls|csv)$/i.test(filename)) return 'purple';
+    return 'gray';
+  }
+
+  function refreshDashboard() {
+    // Refresh dashboard data - placeholder for now
+    console.log('Refreshing dashboard...');
+    location.reload();
+  }
+
+  // Handle shared file upload from dashboard
+  async function handleSharedFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const groupId = window.currentDashboardGroupId || dashboardGroupId;
+    if (!groupId) {
+      alert('Group ID not available. Please reload the page.');
+      return;
+    }
+
+    try {
+      const base64Data = await fileToBase64(file);
+
+      const res = await fetch(`${javaURI}/api/groups/chat/${groupId}/files`, {
+        ...fetchOptions,
+        method: 'POST',
+        headers: {
+          ...(fetchOptions.headers || {}),
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ filename: file.name, base64Data })
+      });
+
+      if (!res.ok) {
+        const result = await res.json().catch(() => ({}));
+        throw new Error(result.message || 'Upload failed');
+      }
+
+      const result = await res.json();
+      console.log(`File "${result.filename}" uploaded successfully!`);
+      
+      // Refresh the shared files grid
+      await fetchDashboardSharedFiles();
+    } catch (error) {
+      console.error('File upload error:', error);
+      alert(`Error uploading file: ${error.message}`);
+    }
+
+    event.target.value = '';
+  }
+</script>

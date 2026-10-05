@@ -1,0 +1,559 @@
+---
+layout: null
+permalink: /quiz1/
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Recognizing Domestic Abuse</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FAF6F0;
+    --warm-white: #FFFDF9;
+    --deep: #1C1410;
+    --gold: #d3ad66;
+    --rose: #C2706A;
+    --sage: #7A9E8E;
+    --ink: #2E2520;
+    --muted: #8A7D74;
+    --card-bg: rgba(255,255,255,0.72);
+    --shadow: 0 4px 40px rgba(28,20,16,0.10);
+    --correct: #4CAF50;
+    --incorrect: #E05252;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(194,112,106,0.09) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 80%, rgba(122,158,142,0.08) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .logo-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--rose);
+  }
+  .logo-mark::before, .logo-mark::after {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--rose);
+    opacity: 0.5;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--deep);
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  h1 em { font-style: italic; color: var(--rose); }
+  .subtitle {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .npc-badge {
+    display: inline-block;
+    background: rgba(194,112,106,0.12);
+    color: var(--rose);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(194,112,106,0.25);
+  }
+  .progress-wrap {
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 2px;
+    background: rgba(28,20,16,0.12);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--rose), var(--gold));
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .question-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(194,112,106,0.18);
+    border-radius: 20px;
+    padding: 40px 40px 36px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .question-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 14px;
+  }
+  .question-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.25rem, 3vw, 1.6rem);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--deep);
+    margin-bottom: 28px;
+  }
+  .options { display: flex; flex-direction: column; gap: 11px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 15px 20px;
+    border: 1.5px solid rgba(28,20,16,0.10);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    background: rgba(255,255,255,0.5);
+    text-align: left;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .option:hover:not(.locked) { border-color: var(--rose); background: rgba(194,112,106,0.06); transform: translateX(4px); }
+  .option.selected { border-color: var(--rose); background: rgba(194,112,106,0.08); }
+  .option.correct-answer { border-color: var(--correct); background: rgba(76,175,80,0.08); }
+  .option.wrong-answer { border-color: var(--incorrect); background: rgba(224,82,82,0.08); }
+  .option.locked { cursor: default; }
+  .option-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: rgba(194,112,106,0.12);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--rose);
+    transition: all 0.22s ease;
+  }
+  .option.selected .option-letter { background: var(--rose); color: white; }
+  .option.correct-answer .option-letter { background: var(--correct); color: white; }
+  .option.wrong-answer .option-letter { background: var(--incorrect); color: white; }
+  .option-text { font-size: 14.5px; font-weight: 400; color: var(--ink); line-height: 1.5; padding-top: 4px; }
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.correct { background: rgba(76,175,80,0.10); border: 1px solid rgba(76,175,80,0.25); color: #2E6B30; }
+  .feedback.incorrect { background: rgba(224,82,82,0.10); border: 1px solid rgba(224,82,82,0.25); color: #8B2020; }
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.6s 0.15s ease both;
+  }
+  .btn {
+    padding: 14px 32px;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid rgba(28,20,16,0.15);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--ink); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--rose), var(--gold));
+    color: white;
+    box-shadow: 0 4px 20px rgba(194,112,106,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(194,112,106,0.38); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Results screen */
+  .result-screen { animation: fadeUp 0.7s ease both; }
+  .score-banner {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    border: 1px solid rgba(194,112,106,0.2);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--rose);
+    background: rgba(194,112,106,0.06);
+  }
+  .score-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 400;
+    color: var(--rose);
+    line-height: 1;
+  }
+  .score-denom { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .score-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 400;
+    color: var(--deep);
+    margin-bottom: 10px;
+  }
+  .score-message { font-size: 14.5px; color: var(--muted); line-height: 1.7; max-width: 440px; margin: 0 auto 24px; }
+  .review-section {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 32px 40px;
+    border: 1px solid rgba(194,112,106,0.18);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .review-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rose);
+    margin-bottom: 24px;
+  }
+  .review-item { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(28,20,16,0.07); }
+  .review-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .review-q { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--deep); margin-bottom: 10px; font-weight: 400; line-height: 1.4; }
+  .review-answer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .review-answer.correct { background: rgba(76,175,80,0.10); color: #2E6B30; }
+  .review-answer.incorrect { background: rgba(224,82,82,0.10); color: #8B2020; }
+  .review-answer .dot { width: 8px; height: 8px; border-radius: 50%; min-width: 8px; margin-top: 5px; }
+  .review-answer.correct .dot { background: var(--correct); }
+  .review-answer.incorrect .dot { background: var(--incorrect); }
+  .review-explanation { font-size: 13px; color: var(--muted); line-height: 1.6; padding-left: 4px; font-style: italic; }
+  .restart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(28,20,16,0.15);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.22s ease;
+  }
+  .restart-btn:hover { border-color: var(--ink); color: var(--ink); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .slide-in { animation: slideIn 0.4s ease both; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @media (max-width: 520px) {
+    .question-card { padding: 28px 22px 24px; }
+    .review-section { padding: 24px 22px; }
+    .container { padding: 32px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="logo-mark">Safe Passage Heals</div>
+    <h1>Recognizing <em>Domestic Abuse</em></h1>
+  </header>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label">
+      <span id="progressText">Question 1 of 5</span>
+      <span id="progressPercent">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div id="quizArea"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "Which of the following is an example of domestic abuse?",
+    options: [
+      { letter: "A", text: "A partner raising their voice during a heated argument about finances" },
+      { letter: "B", text: "A partner controlling what you wear, who you see, and monitoring your phone" },
+      { letter: "C", text: "A partner disagreeing with your parenting choices" },
+      { letter: "D", text: "A partner feeling jealous occasionally but not acting on it" }
+    ],
+    correct: "B",
+    explanation: "Controlling behaviors — like monitoring communications, restricting who you can see, or dictating your appearance — are forms of coercive control, which is a recognized pattern of domestic abuse even when there is no physical violence."
+  },
+  {
+    text: "Domestic abuse is primarily physical violence. True or False?",
+    options: [
+      { letter: "A", text: "True — domestic abuse only counts when there is physical harm" },
+      { letter: "B", text: "False — abuse includes emotional, financial, sexual, and psychological harm" },
+      { letter: "C", text: "True — emotional harm doesn't qualify as abuse" },
+      { letter: "D", text: "False — but financial abuse is the most common form" }
+    ],
+    correct: "B",
+    explanation: "Domestic abuse takes many forms beyond physical violence, including emotional manipulation, financial control, sexual coercion, isolation, threats, and digital surveillance. All are recognized forms of abuse."
+  },
+  {
+    text: "Which warning sign might indicate someone is experiencing domestic abuse?",
+    options: [
+      { letter: "A", text: "They seem happy and confident at work but tired at home" },
+      { letter: "B", text: "They frequently cancel plans, seem fearful, or have unexplained injuries" },
+      { letter: "C", text: "They talk openly about disagreements with their partner" },
+      { letter: "D", text: "They spend a lot of time with friends and family" }
+    ],
+    correct: "B",
+    explanation: "Common warning signs include social withdrawal, cancelled plans, fearfulness around their partner, unexplained injuries, low self-esteem, and sudden changes in behavior. Open communication about relationship disagreements is generally healthy."
+  },
+  {
+    text: "Domestic abuse includes which of the following behaviors?",
+    options: [
+      { letter: "A", text: "Physical violence like hitting or pushing" },
+      { letter: "B", text: "Emotional abuse like constant criticism and belittling" },
+      { letter: "C", text: "Financial control like preventing access to money or employment" },
+      { letter: "D", text: "All of the above" }
+    ],
+    correct: "D",
+    explanation: "Domestic abuse encompasses physical, emotional, sexual, and financial abuse, as well as controlling behaviors that isolate or intimidate. Recognizing these forms helps in identifying and addressing abuse."
+  }
+];
+
+let current = 0;
+let answers = Array(questions.length).fill(null);
+let revealed = Array(questions.length).fill(false);
+let selected = null;
+
+function render() {
+  const total = questions.length;
+  const answered = answers.filter(a => a !== null).length;
+  const pct = Math.round((answered / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('progressWrap').style.display = '';
+
+  const q = questions[current];
+  selected = answers[current];
+  const isRevealed = revealed[current];
+
+  const optionsHtml = q.options.map(opt => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' locked';
+      if (opt.letter === q.correct) cls += ' correct-answer';
+      else if (opt.letter === selected && selected !== q.correct) cls += ' wrong-answer';
+    } else if (selected === opt.letter) {
+      cls += ' selected';
+    }
+    return `<button class="${cls}" onclick="selectOption('${opt.letter}', this)">
+      <span class="option-letter">${opt.letter}</span>
+      <span class="option-text">${opt.text}</span>
+    </button>`;
+  }).join('');
+
+  const feedbackHtml = isRevealed
+    ? `<div class="feedback ${selected === q.correct ? 'correct' : 'incorrect'}" style="display:block">
+        <strong>${selected === q.correct ? '✓ Correct!' : '✗ Not quite.'}</strong> ${q.explanation}
+       </div>`
+    : '';
+
+  const isLast = current === total - 1;
+  const nextLabel = isRevealed ? (isLast ? 'Continue' : 'Next Question →') : 'Check Answer';
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="question-card slide-in">
+      <div class="question-number">Question ${current + 1} of ${total}</div>
+      <p class="question-text">${q.text}</p>
+      <div class="options">${optionsHtml}</div>
+      ${feedbackHtml}
+    </div>
+    <div class="nav">
+      ${current > 0 ? `<button class="btn btn-ghost" onclick="goBack()">← Back</button>` : `<div></div>`}
+      <button class="btn btn-primary" id="nextBtn" onclick="goNext()" ${selected || isRevealed ? '' : 'disabled'}>
+        ${nextLabel}
+      </button>
+    </div>
+  `;
+}
+
+function selectOption(letter, el) {
+  if (revealed[current]) return;
+  selected = letter;
+  answers[current] = letter;
+  document.querySelectorAll('.option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function goNext() {
+  if (!selected && !revealed[current]) return;
+  if (!revealed[current]) {
+    revealed[current] = true;
+    render();
+    return;
+  }
+  if (current < questions.length - 1) {
+    current++;
+    render();
+  } else {
+    window.location.href = "/flaskandfurious/recovery/";
+  }
+}
+
+function goBack() {
+  if (current > 0) { current--; render(); }
+}
+
+function showResult() {
+  const score = answers.reduce((acc, a, i) => acc + (a === questions[i].correct ? 1 : 0), 0);
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+
+  let title, message;
+  if (pct === 100) { title = "Outstanding awareness"; message = "You have a strong understanding of what domestic abuse looks like. That knowledge is powerful — it can help you recognize warning signs in your own life or support someone you care about."; }
+  else if (pct >= 60) { title = "Good foundation"; message = "You recognize many forms of domestic abuse, but there's more to learn. Reviewing the answers below can deepen your understanding and sharpen your ability to spot the signs."; }
+  else { title = "Every step toward awareness matters"; message = "Domestic abuse can be difficult to recognize — especially when it doesn't match what we've seen or been taught. Review the answers below; this knowledge could one day make a real difference."; }
+
+  document.getElementById('progressWrap').style.display = 'none';
+
+  const reviewItems = questions.map((q, i) => {
+    const userAns = answers[i];
+    const isCorrect = userAns === q.correct;
+    const userOpt = q.options.find(o => o.letter === userAns);
+    const correctOpt = q.options.find(o => o.letter === q.correct);
+    return `<div class="review-item">
+      <p class="review-q">${i + 1}. ${q.text}</p>
+      ${!isCorrect ? `<div class="review-answer incorrect"><div class="dot"></div><div>Your answer: ${userOpt ? userOpt.text : 'Not answered'}</div></div>` : ''}
+      <div class="review-answer correct"><div class="dot"></div><div>Correct: ${correctOpt.text}</div></div>
+      <p class="review-explanation">${q.explanation}</p>
+    </div>`;
+  }).join('');
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="result-screen">
+      <div class="score-banner">
+        <div class="score-circle">
+          <div class="score-num">${score}/${total}</div>
+          <div class="score-denom">${pct}%</div>
+        </div>
+        <h2 class="score-title">${title}</h2>
+        <p class="score-message">${message}</p>
+        <button class="restart-btn" onclick="restart()">↺ Try again</button>
+      </div>
+      <div class="review-section">
+        <div class="review-title">Answer Review</div>
+        ${reviewItems}
+      </div>
+    </div>
+  `;
+}
+
+function restart() {
+  current = 0;
+  answers = Array(questions.length).fill(null);
+  revealed = Array(questions.length).fill(false);
+  selected = null;
+  document.getElementById('progressWrap').style.display = '';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

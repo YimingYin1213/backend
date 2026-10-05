@@ -1,0 +1,273 @@
+# course illustrations
+college_board_fundamentals: &college_board_fundamentals |
+  College Board Basic Programming Units
+  -------------------------------------      
+    Fundamentals of Programming
+    +------------------+
+    | CB Unit 1        |
+    | Primitive Types  | --> Types appear in Code
+    | 2.5%-5%          |
+    +------------------+
+    +------------------+
+    | Unit 3           |
+    | Booleans and Ifs | --> Understand De Morgan's Law
+    | 15%-17.5%        |
+    +------------------+
+    +------------------+
+    | Unit 4           |
+    | Iteration        | --> String Iteration, repeat until expression
+    | 17.5%-22.5%      |
+    +------------------+
+    +------------------+
+    | Unit 10 - Part 1 |
+    | Recursion        | --> Base case and recursive call
+    | 5%-7.5%          |
+    +------------------+
+            |
+    Fundamentals of Java
+    +------------------+
+    | Unit 2           |
+    | Using Objects    | --> Instance vs Static Methods, Java and 3rd party Methods ... 
+    | 5%-7.5%          |
+    +------------------+
+    +------------------+
+    | Unit 5           |
+    | Writing Classes  | --> Diagram a Class, constructor, setters, ... 
+    | 5%-7.5%          |
+    +------------------+
+    +------------------+
+    | Unit 9           |
+    | Inheritance      | --> Extend class, polymorphism, super, this, ...
+    | 5%-7.5%          |
+    +------------------+
+  
+data_structures: &data_structures |
+  Required Data Structures for Course
+  -----------------------------------
+    College Board Units
+    +------------------+
+    | Unit 6           |
+    | Array            | --> Linear data structure, fixed size, algos, ...
+    | 5%-7.5%          |
+    +------------------+
+    +------------------+
+    | Unit 7           |
+    | ArrayList        | --> Linear and dynamic size, Collection Framework 
+    | 2.5%-7.5%        |
+    +------------------+
+    +------------------+
+    | Unit 8           |
+    | 2D Array         | --> 2D Linear data structure, col/row order
+    | 7.5%-10%         |
+    +------------------+
+    +------------------+
+    | Unit 10 - Part 2 |
+    | Search/Sort      | --> Bubble, Selection, Insertion, Merge
+    | 5%-7.5%          |
+    +------------------+
+            |            
+    College Articulated Requirements, B or better
+    +------------------+
+    | Java Fundamental |
+    | HashMap          | --> Key-value data structure
+    |                  |
+    +------------------+
+    +------------------+
+    | Algorithmic      |
+    | Queue,Stack,...  | --> Collections Framework
+    |                  |
+    +------------------+
+    +--------------------+
+    | Abstract Data Type |
+    | Graph              | --> Nodes, Vertices, Edges
+    |                    |
+    +--------------------+
+
+frq_types: &frq_types |
+  Required FRQ Types by College Board
+  -----------------------------------
+  Each FRQ writes program code, uses expressions, conditions, and iteration 
+  +--------------------+
+  | Methods and        |
+  | Control Structures | -->  Algoritmic challenge, use objects, call methods, ...
+  | Units #1-#4        |
+  +--------------------+
+  +--------------------+
+  | Classes            |
+  |                    | -->  Define a new type by creating a class ...
+  | Units #2,#5,#9     |
+  +--------------------+
+  +--------------------+
+  | Arrays /           |
+  | ArrayLists         | -->  Create, manipulate elements in 1D array or ArrayList, ...
+  | Units #6,#7        |
+  +--------------------+
+  +--------------------+
+  | 2D Array           |
+  |                    | -->  Create, traverse, and manipulate elements in 2D array, ...
+  | Units #6,#7        |
+  +--------------------+
+
+web_dev_layers: &web_dev_layers |
+    +---------------+
+    | GitHub Pages  |
+    | Design, Layout|
+    |   Frontend    |
+    +---------------+
+          |
+          | User presentation, style 
+          | Actions
+          v
+    +--------------+
+    |  JavaScript  |
+    | Logic/Events |
+    +--------------+
+          |
+          | Functionality, interactivity
+          | Sends HTTP requests/responses
+          v
+    +----------------+
+    | AWS EC2 Server |
+    |  Java / Spring |
+    |    Backend     |
+    +----------------+
+          |
+          | Server-Side Processing
+          | Analysis, POJOs, ORM, JPA
+          | Communicate with AWS Services
+          v
+    +----------------+
+    |  AWS Services  |
+    |   Store Data   |
+    +----------------+
+
+# CSA course meta data
+Sprint1:
+  shared: "Onboarding"
+  start: 0
+  end: 2
+  0:
+    theme: "Onboarding & Java Readiness"
+    goals:
+      - "Environment Setup"
+      - "Scrum Habits"
+      - "Student Teaching Prep"
+  1:
+    theme: "Framework for Sprints"
+    goals:
+      - "Agile Methodologies"
+      - "Tools & Equipment"
+      - "Onboarding Adventure"
+  2:
+    theme: "Developer Toolchain"
+    goals:
+      - "Python/Flask Backend Infograph"
+      - "Portfolio Foundations"
+Sprint2:
+  title: Java / Spring Web Development
+  description: Students will master the Fundamentals of Java Programming using the Spring Framework. In this Sprint, students will become familiar with Java types, booleans, iteration, recursion, using, and writing objects. Student teaching labs will introduce AP-required aspects of Java while learning the Spring Framework. This will teach key Java concepts while using a JWT login system, a Rest Controller, Plain Old Java Objects (POJOs), Object Relational Model (ORM), and Java Persistence API (JPA).
+  illustration: *college_board_fundamentals
+  start: 3
+  end: 7
+  3:
+    theme: "Java / Spring Kickoff"
+    goals:
+      - "Transition to Full Stack"
+      - "Sprint 2 Planning"
+  4:
+    theme: "Spring Web Development"
+    goals:
+      - "Anatomy of a Spring Boot Project"
+      - "REST Controllers"
+      - "JWT Auth Concepts"
+Sprint3:
+  title: Team Project for N@tM
+  description: In this Sprint, students will continue to become familiar with Java development as they immerse themselves in  Web Development using the Spring Framework. Coding will focus on RESTful APIs, receiving requests, working with data using SQLite, and responding to requests.  Students will pick a Full Stack Web Development project, and work in teams to build it out, including all layers, and how to use ThymeLeaf to create an Admin UI.  The goal is to have the project working and deployed on AWS by the end of this Sprint.
+  illustration: *web_dev_layers
+  start: 8
+  end: 12
+Sprint4:
+  title: Integration, Fontend, MVC Layers, and FRQs
+  description: Trimester 2 begins with four weeks of Integration and FRQs.  At the center of work is the College Board FRQs and Frontend/Backend and MVC layers.  Consider a Mini-project that Integrates Trimister 1 work with another team, adds an FRQ, and performs Unit 10 Sorting and Analysis. For each peace, provide JavaScript Visualization; ThymeLeaf administration, Backend Java Sorting, Inheritance, and Polymorphic behavior.  Also, teach the College Board FRQ topic to the class.  Ideas spans at least two teams or eight students.
+  start: 13
+  end: 16
+Sprint5:
+  title: AP Java FRQ Topics & OCS Platform Enhancement
+  description: In this Sprint, students will master AP CSA Java requirements by teaching a selected topic to their peers and building or improving features on the Open Coding Society (OCS) platform. Required topics include Methods & Control Structures, Arrays, ArrayLists, Classes, 2D Arrays, Searching, and Sorting. Each student will deliver a lesson on their chosen topic, complete coding hacks from other groups' topics, and contribute to OCS features for student tracking and feedback. Teaching and platform work are integrated, with all students demonstrating mastery through both instruction and hands-on development.
+  start: 17
+  end: 19
+  17:
+    theme: "Prep and OCS Requirements"
+    goals:
+      - "Pick Teaching Topics"
+      - "Define Lesson, HW Standards"
+      - "Develop OCS Features"
+  18:
+    theme: "Prototype Teaching"
+    goals:
+      - "Present 1-Topic (prototype)"
+      - "Grading/Feedback 1-Topic"
+      - "Provide OCS Feedback"
+      - "Revise OCS Features"
+  19:
+    theme: "Teaching the Right Way"
+    goals:
+      - "Present 4-Topics (final)"
+      - "Record Student Data"
+      - "Analyze Student Data"
+Sprint6:
+  title: Passion Project or OCS Enhancement & N@tM Feedback
+  description: In this Sprint, students may choose to continue enhancing the OCS platform or propose and prototype a new project based on their interests and skills. The focus is on creativity, design, and technical growth—whether through OCS development or a new passion project. Students should document their design process, make technical decisions, and present their work for peer and instructor feedback. Consider frontend design, database modeling, API plans, JWT designs, big data solutions, and future usefulness. Weekly live reviews and feedback will support project evolution.
+  start: 20
+  end: 24
+  20:
+    theme: "Passion Project Ideation"
+    goals:
+      - "Present 3-Topics (final)"
+      - "Project Ideation"
+      - "Research Technologies"
+      - "Checkpoint Ideation"
+  21:
+    theme: "Design Checkpoint"
+    goals:  
+      - "Project Kanban"
+      - "Database Models (draw.io)"
+      - "Frontend UI/UX (html/css)"
+      - "API Basics (postman)"
+  22:
+    theme: "Functional Checkpoint"
+    goals:  
+      - "Issue Burndown"
+      - "Backend Admin UI"
+      - "Frontend Interactivity"
+      - "API Testing (postman)"
+  23: 
+    theme: "Final Prototype Push"
+    goals:    
+      - "Final Features"
+      - "Testing/Debugging"
+      - "Project Presentation"
+      - "N@tM Feedback"
+  24: 
+    theme: "N@tM Retrospective"
+    goals:    
+      - "Peer Review"
+      - "Instructor Feedback"
+      - "Next Steps Planning"
+Sprint7: 
+  title: Data Structures and Passion Project v1.0
+  description: A focus on Data Structures that relate to the AP exam. A key requirement is to make your own Algorithmic sorting video. The theme is to produce work that can help you pass the AP Exam and improve your Passion Project. Each student must cover key concepts from the Four AP FRQ types, contain a key Data Structure, and utilize Sorting.
+  illustration: *data_structures
+  start: 25
+  end: 29
+Sprint8:
+  title: AP Weeks, Study Sessions
+  description: Students will lead several study sessions (20-minute test, followed by review) the week before the exam. In any break in study, students will transition activities back to their final project.
+  illustration: *frq_types
+  start: 30
+  end: 33
+Sprint9:
+  title: Passion Project v2.0 and N@tM
+  description: Wrap up your preferred project and data structures. There will be an opportunity to contribute and be published to the Open Coding Society. If your project is selected, then you will receive a high 'A' on the final project.
+  start: 34
+  end: 37

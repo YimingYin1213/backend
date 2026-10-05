@@ -1,0 +1,574 @@
+---
+layout: post
+title: Event Calendar
+permalink: /sph/eventcalendar1/
+show_reading_time: false
+---
+
+<style>
+  /* Allow the shared site header from the layout to show */
+  header.site-header,
+  .site-header,
+  nav.navbar,
+  .navbar {
+    display: block !important;
+  }
+  
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #ffffff;
+    min-height: 100vh;
+    margin: 0;
+    color: #111111;
+  }
+
+  /* ── TOP BAR ── */
+  .top-bar {
+    background: #6b3fa0;
+    color: white;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+  }
+
+  .top-bar a {
+    color: #ffd700;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  /* ── CALENDAR ── */
+  #calendar {
+    max-width: 900px;
+    margin: 40px auto;
+  }
+
+  body {
+    position: relative;
+    background-color: #ffffff;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/flaskandfurious/safepassageheals/Safe_Passage.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 400px;
+    opacity: 0.08;
+    z-index: -1;
+  }
+
+  .purple-bar {
+    width: 100%;
+    height: 40px;
+    background-color: #6f5aa8;
+    display: block;
+  }
+
+  /* ── FULLCALENDAR WHITE THEME OVERRIDES ── */
+  .fc {
+    background: #ffffff;
+    color: #111111;
+  }
+
+  /* Header toolbar (month/week/day/list buttons + title) */
+  .fc .fc-toolbar-title {
+    color: #111111;
+  }
+
+  .fc .fc-button {
+    background-color: #e5e7eb;
+    border-color: #d1d5db;
+    color: #111111;
+  }
+
+  .fc .fc-button:hover {
+    background-color: #161617;
+    border-color: #0c0c0c;
+    color: #111111;
+  }
+
+  .fc .fc-button-primary:not(:disabled).fc-button-active,
+  .fc .fc-button-primary:not(:disabled):active {
+    background-color: #6b3fa0;
+    border-color: #6b3fa0;
+    color: #ffffff;
+  }
+
+  /* Day header row (Sun, Mon, Tue…) */
+  .fc .fc-col-header-cell {
+    background: #f3f4f6;
+    color: #111111;
+  }
+
+  .fc .fc-col-header-cell-cushion {
+    color: #111111;
+    font-weight: 700;
+  }
+
+  /* Day number cells */
+  .fc .fc-daygrid-day {
+    background: #ffffff;
+  }
+
+  .fc .fc-daygrid-day-number,
+  .fc .fc-col-header-cell-cushion,
+  .fc .fc-daygrid-event .fc-event-title,
+  .fc .fc-daygrid-event .fc-event-time,
+  .fc .fc-daygrid-event {
+    color: #4b0082 !important;
+  }
+
+  .fc .fc-daygrid-event-dot {
+    background-color: #4b0082 !important;
+  }
+
+  /* Today highlight */
+  .fc .fc-day-today {
+    background: #ede9fe !important;
+  }
+
+  /* Other-month days */
+  .fc .fc-day-other .fc-daygrid-day-number {
+    color: #9ca3af;
+  }
+
+  /* Grid lines */
+  .fc .fc-scrollgrid,
+  .fc td,
+  .fc th {
+    border-color: #e5e7eb !important;
+  }
+
+  /* List view */
+  .fc .fc-list-day-cushion,
+  .fc .fc-list-day-text,
+  .fc .fc-list-day-side-text {
+    color: #111111;
+  }
+
+  .fc .fc-list-event:hover td {
+    background: #f3f4f6;
+  }
+
+  .fc .fc-list-empty {
+    background: #ffffff;
+    color: #6b7280;
+  }
+
+  /* Time grid (week/day views) */
+  .fc .fc-timegrid-slot-label-cushion {
+    color: #374151;
+  }
+
+  .fc .fc-timegrid-axis-cushion {
+    color: #374151;
+  }
+
+  /* Scrollgrid body background */
+  .fc .fc-scrollgrid-section > td {
+    background: #ffffff;
+  }
+  
+    /* ── FLOWER ANIMATION AND POPUP ── */
+    #corner-flower-container {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 2002;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      pointer-events: none;
+    }
+    #corner-flower {
+      cursor: pointer;
+      pointer-events: auto;
+    }
+      #corner-flower .heart-shape {
+        opacity: 0;
+        transform: scaleY(0.1) scaleX(0.1);
+        transform-origin: center;
+        transition: opacity 0.4s, transform 0.7s cubic-bezier(0.22,1,0.36,1);
+      }
+      #corner-flower.bloomed .heart-shape {
+        opacity: 1;
+        transform: scaleY(1) scaleX(1);
+      }
+    #corner-popup {
+      margin-top: 8px;
+      background: #fffbe9;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px #0001;
+      padding: 12px 18px 10px 18px;
+      min-width: 180px;
+      max-width: 260px;
+      font-size: 0.97rem;
+      pointer-events: auto;
+      animation: popup-bounce-in 0.6s cubic-bezier(0.22,1,0.36,1);
+    }
+    .corner-popup-content {
+      position: relative;
+    }
+    #corner-popup-close {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      color: #7c3aed;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+    #corner-events-list {
+      list-style: none;
+      padding: 0;
+      margin: 8px 0 0 0;
+    }
+    #corner-events-list li {
+      margin-bottom: 6px;
+      color: #7c3aed;
+      font-size: 0.97rem;
+    }
+    @keyframes popup-bounce-in {
+      0% { transform: scale(0.7) translateY(-20px); opacity: 0; }
+      60% { transform: scale(1.05) translateY(2px); opacity: 1; }
+      100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+</style>
+
+
+
+<!-- User bar -->
+<div id="user-bar" style="
+  max-width: 900px;
+  margin: 24px auto 0 auto;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Segoe UI', sans-serif;
+">
+  <span id="user-greeting" style="color:#4f46e5; font-weight:600; font-size:0.95rem;"></span>
+  <button id="logout-btn" style="display:none;
+    padding: 7px 16px;
+    background: white;
+    color: #ef4444;
+    border: 1.5px solid #ef4444;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;"
+    onclick="fetch('${BACKEND}/api/authenticate', {method:'DELETE', credentials:'include'}).finally(() => window.location.href='{{ site.baseurl }}/login')">
+    Sign Out
+  </button>
+  <a id="login-btn" href="{{ site.baseurl }}/login" style="display:none;
+    padding: 7px 16px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    text-decoration: none;">
+    Sign In
+  </a>
+</div>
+
+<!-- Admin Event Management Dashboard Button (admin only) -->
+<div id="edit-events-bar" style="
+  max-width: 900px;
+  margin: 16px auto 0 auto;
+  display: flex;
+  justify-content: flex-start;
+  font-family: 'Segoe UI', sans-serif;
+">
+  <a id="edit-events-btn" href="{{ site.baseurl }}/sph/eventmgmt/" style="display:none;
+    padding: 9px 20px;
+    background: #0c0c0c;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    transition: background 0.2s;">
+    ✏️ Admin Event Management Dashboard
+  </a>
+</div>
+
+<div id="calendar"></div>
+<div id="event-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:1000; justify-content:center; align-items:center;">
+  <div id="modal-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6);"></div>
+  <div id="modal-content" style="
+    position:relative;
+    background: #f1f1f3;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 650px;
+    width: 90%;
+    z-index: 1001;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  ">
+    <button id="modal-close" style="position:absolute; top:10px; right:14px; background:none; border:none; font-size:24px; color:black; cursor:pointer; z-index:10;">&times;</button>
+
+    <!-- Left: Image -->
+    <div id="modal-image" style="
+      width: 220px;
+      min-width: 220px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 12px 0 0 12px;
+    "></div>
+
+    <!-- Right: Event Details -->
+    <div style="
+      padding: 32px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+      color: white;
+      flex: 1;
+    ">
+      <h2 id="modal-title" style="margin:0 0 6px 0; font-size:1.3rem; font-family:'Segoe UI',sans-serif;"></h2>
+      <p id="modal-time" style="margin:0; font-size:0.9rem; color:#a5b4fc;"></p>
+      <p id="modal-writeup" style="margin:0; font-size:0.92rem; color:#e2e8f0;"></p>
+      <p id="modal-location" style="margin:0; font-size:0.9rem; color:#94a3b8;"></p>
+      <a id="modal-registration" href="#" target="_blank" style="color:#ffd700; font-weight:bold; font-size:0.95rem; text-decoration:none; margin-top:4px;"></a>
+    </div>
+  </div>
+</div>
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet"/>
+<!-- FullCalendar JS -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script type="module">
+import {pythonURI} from "{{ site.baseurl }}/assets/js/api/config.js";
+
+document.addEventListener('DOMContentLoaded', async function() {
+  const BACKEND = pythonURI;
+  window.sphCalendarState = { events: [] };
+
+  // Check session and update user bar
+  try {
+    const res = await fetch(`${BACKEND}/api/id`, { credentials: 'include' });
+    if (res.ok) {
+      const user = await res.json();
+      document.getElementById('user-greeting').textContent = `Hello, ${user.name || user.uid}`;
+      document.getElementById('logout-btn').style.display = 'inline-block';
+
+      // Show Edit Events button only for admins
+      if (user.role === 'Admin') {
+        document.getElementById('edit-events-btn').style.display = 'inline-block';
+      }
+    } else {
+      document.getElementById('login-btn').style.display = 'inline-block';
+    }
+  } catch (_) {
+    document.getElementById('login-btn').style.display = 'inline-block';
+  }
+
+  var calendarEl = document.getElementById('calendar');
+  var calendar = new FullCalendar.Calendar(calendarEl, {
+    initialView: 'dayGridMonth',
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
+    },
+    navLinks: true,
+    selectable: true,
+    selectMirror: true,
+    dayMaxEvents: true,
+    events: BACKEND + '/api/events',
+    eventsSet: function(events) {
+      window.sphCalendarState.events = events.map(event => ({
+        title: event.title,
+        start: event.start,
+        end: event.end,
+        extendedProps: event.extendedProps || {},
+      }));
+      window.dispatchEvent(new CustomEvent('sph:calendar-events-updated'));
+    },
+    eventClick: function(info) {
+      const e = info.event.extendedProps;
+      const start = info.event.start;
+      const end = info.event.end;
+      const eventDescription = e.description || e.writeup || '';
+
+      const formatDate = date => new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      }).format(date);
+
+      let timeText = '';
+      if (start) {
+        timeText = formatDate(start);
+        if (end && end > start) {
+          timeText += ` — ${formatDate(end)}`;
+        }
+      }
+
+      document.getElementById('modal-title').textContent = info.event.title;
+      document.getElementById('modal-time').textContent = timeText ? `Time: ${timeText}` : '';
+      document.getElementById('modal-writeup').textContent = eventDescription;
+      document.getElementById('modal-location').textContent = e.location ? 'Location: ' + e.location : '';
+
+      const regLink = document.getElementById('modal-registration');
+      if (e.registration) {
+        let regUrl = e.registration.trim();
+        if (!/^https?:\/\//i.test(regUrl)) {
+          regUrl = 'https://' + regUrl;
+        }
+        regLink.href = regUrl;
+        regLink.textContent = 'Register Here';
+      } else {
+        regLink.textContent = '';
+      }
+
+      const flyer = e.flyer || '/images/docx/Safe_Passage.png';
+      const flyerPath = flyer.startsWith('/') ? flyer : '/' + flyer;
+      document.getElementById('modal-image').style.backgroundImage = `url('${BACKEND}${flyerPath}')`;
+      const modal = document.getElementById('event-modal');
+      modal.style.display = 'flex';
+    },
+  });
+
+  calendar.render();
+
+  const modal = document.getElementById('event-modal');
+  const closeButton = document.getElementById('modal-close');
+  const overlay = document.getElementById('modal-overlay');
+
+  const closeModal = () => {
+    modal.style.display = 'none';
+  };
+
+  closeButton.addEventListener('click', closeModal);
+  overlay.addEventListener('click', closeModal);
+});
+</script>
+
+<!-- Bottom-right flower animation and popup -->
+<div id="corner-flower-container" style="top:auto; bottom:38px; right:38px; left:auto;">
+  <svg id="corner-flower" width="110" height="110" viewBox="0 0 110 110">
+    <g id="flower-bloom-group" style="transform:scale(0.2);opacity:0;transform-origin:55px 55px;transition:transform 2.2s cubic-bezier(0.22,1,0.36,1),opacity 1.2s;">
+      <!-- 6 oval petals, pink, around a large yellow center -->
+      <g>
+        <!-- 5 wavy, heart-like petals, evenly spaced and farther from center -->
+        <path class="petal" d="M55,8 C65,0 95,20 70,48 Q55,60 55,8 Z" fill="#f8a5c2" stroke="#222" stroke-width="4"/>
+        <path class="petal" d="M55,8 C65,0 95,20 70,48 Q55,60 55,8 Z" fill="#f8a5c2" stroke="#222" stroke-width="4" transform="rotate(72 55 55)"/>
+        <path class="petal" d="M55,8 C65,0 95,20 70,48 Q55,60 55,8 Z" fill="#f8a5c2" stroke="#222" stroke-width="4" transform="rotate(144 55 55)"/>
+        <path class="petal" d="M55,8 C65,0 95,20 70,48 Q55,60 55,8 Z" fill="#f8a5c2" stroke="#222" stroke-width="4" transform="rotate(216 55 55)"/>
+        <path class="petal" d="M55,8 C65,0 95,20 70,48 Q55,60 55,8 Z" fill="#f8a5c2" stroke="#222" stroke-width="4" transform="rotate(288 55 55)"/>
+        <!-- Large yellow center -->
+        <circle class="flower-center" cx="55" cy="55" r="26" fill="#FFD700" stroke="#222" stroke-width="5"/>
+      </g>
+    </g>
+  </svg>
+    <svg id="corner-flower" width="110" height="110" viewBox="0 0 110 110">
+      <g id="flower-bloom-group" style="transform:scale(0.2);opacity:0;transform-origin:55px 55px;transition:transform 2.2s cubic-bezier(0.22,1,0.36,1),opacity 1.2s;">
+        <!-- Purple heart with thick outline -->
+        <path class="heart-shape" d="M55 85
+          L30 60
+          Q15 40 35 30
+          Q55 20 55 40
+          Q55 20 75 30
+          Q95 40 80 60
+          Z"
+          fill="#a259e6" stroke="#222" stroke-width="5"/>
+      </g>
+    </svg>
+  <div id="corner-popup" style="display:none;">
+    <div class="corner-popup-content">
+      <strong>Upcoming Events</strong>
+      <ul id="corner-events-list"></ul>
+      <button id="corner-popup-close">×</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {pythonURI} from "{{ site.baseurl }}/assets/js/api/config.js";
+
+document.addEventListener('DOMContentLoaded', function() {
+  const BACKEND = pythonURI;
+  const flowerGroup = document.getElementById('flower-bloom-group');
+  const flowerSVG = document.getElementById('corner-flower');
+  const popup = document.getElementById('corner-popup');
+  const closeBtn = document.getElementById('corner-popup-close');
+  if (flowerGroup && flowerSVG) {
+    setTimeout(() => {
+      flowerGroup.style.transform = 'scale(1)';
+      flowerGroup.style.opacity = '1';
+      flowerSVG.classList.add('bloomed');
+      setTimeout(showCornerPopup, 2200);
+    }, 400);
+  }
+  function showCornerPopup() {
+    if (!popup) return;
+    popup.style.display = 'block';
+    fetchCornerEvents();
+  }
+  function hideCornerPopup() {
+    popup.style.display = 'none';
+  }
+  if (closeBtn) closeBtn.onclick = hideCornerPopup;
+  async function fetchCornerEvents() {
+    const list = document.getElementById('corner-events-list');
+    list.innerHTML = '<li style="color:#7c3aed;">Loading…</li>';
+    try {
+      const res = await fetch(BACKEND + '/api/events', { credentials: 'include' });
+      if (!res.ok) throw new Error('Failed to fetch events');
+      const events = await res.json();
+      const now = new Date();
+      const upcoming = (Array.isArray(events) ? events : []).filter(ev => {
+        const d = new Date(ev.event_date || ev.start || ev.date);
+        return !Number.isNaN(d.getTime()) && d > now;
+      }).sort((a, b) => {
+        const aDate = new Date(a.event_date || a.start || a.date);
+        const bDate = new Date(b.event_date || b.start || b.date);
+        return aDate - bDate;
+      }).slice(0, 2);
+
+      if (!upcoming.length) {
+        list.innerHTML = '<li style="color:#7c3aed;">No upcoming events.</li>';
+        return;
+      }
+
+      list.innerHTML = upcoming.map(ev => {
+        const date = new Date(ev.event_date || ev.start || ev.date);
+        const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        return `<li><b>${ev.title || 'Untitled'}</b> <span style="color:#a78bfa;font-weight:400;">${dateStr}</span></li>`;
+      }).join('');
+    } catch (_) {
+      list.innerHTML = '<li style="color:#b91c1c;">Could not load events.</li>';
+    }
+  }
+});
+</script>
+<!-- end flower and popup -->

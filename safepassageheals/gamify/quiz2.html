@@ -1,0 +1,568 @@
+---
+layout: null
+permalink: /quiz2/
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Steps to Take When Abused</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --cream: #FAF6F0;
+    --deep: #1C1410;
+    --gold: #d3ad66;
+    --sage: #7A9E8E;
+    --sage-light: #A8C4B8;
+    --ink: #2E2520;
+    --muted: #8A7D74;
+    --card-bg: rgba(255,255,255,0.72);
+    --shadow: 0 4px 40px rgba(28,20,16,0.10);
+    --correct: #4CAF50;
+    --incorrect: #E05252;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(122,158,142,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 80%, rgba(201,151,58,0.07) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .logo-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sage);
+  }
+  .logo-mark::before, .logo-mark::after {
+    content: '';
+    display: block;
+    width: 28px;
+    height: 1px;
+    background: var(--sage);
+    opacity: 0.5;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: var(--deep);
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+  h1 em { font-style: italic; color: var(--sage); }
+  .subtitle {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  .npc-badge {
+    display: inline-block;
+    background: rgba(122,158,142,0.12);
+    color: var(--sage);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(122,158,142,0.25);
+  }
+  .progress-wrap {
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s 0.1s ease both;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .progress-track {
+    height: 2px;
+    background: rgba(28,20,16,0.12);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--sage), var(--gold));
+    border-radius: 999px;
+    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+  }
+  .question-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(122,158,142,0.2);
+    border-radius: 20px;
+    padding: 40px 40px 36px;
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .question-number {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 14px;
+  }
+  .question-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.25rem, 3vw, 1.6rem);
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--deep);
+    margin-bottom: 28px;
+  }
+  .options { display: flex; flex-direction: column; gap: 11px; }
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 15px 20px;
+    border: 1.5px solid rgba(28,20,16,0.10);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    background: rgba(255,255,255,0.5);
+    text-align: left;
+    width: 100%;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .option:hover:not(.locked) { border-color: var(--sage); background: rgba(122,158,142,0.06); transform: translateX(4px); }
+  .option.selected { border-color: var(--sage); background: rgba(122,158,142,0.08); }
+  .option.correct-answer { border-color: var(--correct); background: rgba(76,175,80,0.08); }
+  .option.wrong-answer { border-color: var(--incorrect); background: rgba(224,82,82,0.08); }
+  .option.locked { cursor: default; }
+  .option-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 50%;
+    background: rgba(122,158,142,0.14);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--sage);
+    transition: all 0.22s ease;
+  }
+  .option.selected .option-letter { background: var(--sage); color: white; }
+  .option.correct-answer .option-letter { background: var(--correct); color: white; }
+  .option.wrong-answer .option-letter { background: var(--incorrect); color: white; }
+  .option-text { font-size: 14.5px; font-weight: 400; color: var(--ink); line-height: 1.5; padding-top: 4px; }
+  .feedback {
+    margin-top: 16px;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    display: none;
+  }
+  .feedback.correct { background: rgba(76,175,80,0.10); border: 1px solid rgba(76,175,80,0.25); color: #2E6B30; }
+  .feedback.incorrect { background: rgba(224,82,82,0.10); border: 1px solid rgba(224,82,82,0.25); color: #8B2020; }
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    animation: fadeUp 0.6s 0.15s ease both;
+  }
+  .btn {
+    padding: 14px 32px;
+    border-radius: 999px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid rgba(28,20,16,0.15);
+    color: var(--muted);
+  }
+  .btn-ghost:hover { border-color: var(--muted); color: var(--ink); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--sage), var(--gold));
+    color: white;
+    box-shadow: 0 4px 20px rgba(122,158,142,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(122,158,142,0.38); }
+  .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .result-screen { animation: fadeUp 0.7s ease both; }
+  .score-banner {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    border: 1px solid rgba(122,158,142,0.2);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--sage);
+    background: rgba(122,158,142,0.08);
+  }
+  .score-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 400;
+    color: var(--sage);
+    line-height: 1;
+  }
+  .score-denom { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .score-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 400;
+    color: var(--deep);
+    margin-bottom: 10px;
+  }
+  .score-message { font-size: 14.5px; color: var(--muted); line-height: 1.7; max-width: 440px; margin: 0 auto 24px; }
+  .review-section {
+    background: var(--card-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 20px;
+    padding: 32px 40px;
+    border: 1px solid rgba(122,158,142,0.18);
+    box-shadow: var(--shadow);
+    margin-bottom: 24px;
+  }
+  .review-title {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 24px;
+  }
+  .review-item { margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(28,20,16,0.07); }
+  .review-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .review-q { font-family: 'Cormorant Garamond', serif; font-size: 1.05rem; color: var(--deep); margin-bottom: 10px; font-weight: 400; line-height: 1.4; }
+  .review-answer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+  .review-answer.correct { background: rgba(76,175,80,0.10); color: #2E6B30; }
+  .review-answer.incorrect { background: rgba(224,82,82,0.10); color: #8B2020; }
+  .review-answer .dot { width: 8px; height: 8px; border-radius: 50%; min-width: 8px; margin-top: 5px; }
+  .review-answer.correct .dot { background: var(--correct); }
+  .review-answer.incorrect .dot { background: var(--incorrect); }
+  .review-explanation { font-size: 13px; color: var(--muted); line-height: 1.6; padding-left: 4px; font-style: italic; }
+  .restart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    border-radius: 999px;
+    border: 1.5px solid rgba(28,20,16,0.15);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.22s ease;
+  }
+  .restart-btn:hover { border-color: var(--ink); color: var(--ink); }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .slide-in { animation: slideIn 0.4s ease both; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @media (max-width: 520px) {
+    .question-card { padding: 28px 22px 24px; }
+    .review-section { padding: 24px 22px; }
+    .container { padding: 32px 16px 64px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="header">
+    <div class="logo-mark">Safe Passage Heals</div>
+    <h1>Steps to Take When <em> Abused</em></h1>
+  </header>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-label">
+      <span id="progressText">Question 1 of 5</span>
+      <span id="progressPercent">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <div id="quizArea"></div>
+</div>
+
+<script>
+const questions = [
+  {
+    text: "What is the FIRST thing someone experiencing abuse should do if they are in immediate danger?",
+    options: [
+      { letter: "A", text: "Confront their abuser to resolve the conflict" },
+      { letter: "B", text: "Call emergency services (911) or get to a safe location immediately" },
+      { letter: "C", text: "Wait until the situation calms down before taking action" },
+      { letter: "D", text: "Pack all their belongings before leaving" }
+    ],
+    correct: "B",
+    explanation: "Immediate physical safety is the top priority. Calling 911 or escaping to a safe location — a neighbor, friend, or public place — should happen before anything else. Confronting an abuser can escalate danger, and leaving belongings behind is always preferable to staying in an unsafe situation."
+  },
+  {
+    text: "What is a 'safety plan' in the context of domestic abuse?",
+    options: [
+      { letter: "A", text: "A legal document filed with the police" },
+      { letter: "B", text: "A personalized strategy outlining steps to stay safe — including escape routes, trusted contacts, and essential documents" },
+      { letter: "C", text: "A shared agreement between the victim and the abuser" },
+      { letter: "D", text: "A shelter's intake process for new residents" }
+    ],
+    correct: "B",
+    explanation: "A safety plan is a personalized, practical plan a survivor creates (often with advocate support) that includes: identifying safe exits, people to call, where to go, important documents to have ready, and how to safely communicate. It is not a legal document or a shared plan with the abuser."
+  },
+  {
+    text: "If you want to tell someone about your abuse situation, who is the safest person to tell?",
+    options: [
+      { letter: "A", text: "A mutual friend of you and your partner" },
+      { letter: "B", text: "A trusted adult, counselor, or a domestic violence hotline" },
+      { letter: "C", text: "A family member of your partner who seems understanding" },
+      { letter: "D", text: "A coworker you don't know very well" }
+    ],
+    correct: "B",
+    explanation: "The safest people to disclose to are those with no ties to the abuser — a trusted personal confidant, a trained counselor, or a domestic violence hotline advocate. Mutual contacts or family members of the abuser can unintentionally (or intentionally) inform them, increasing risk."
+  },
+  {
+    text: "Which of these documents is most important to take if you need to leave quickly?",
+    options: [
+      { letter: "A", text: "Personal photos and sentimental items" },
+      { letter: "B", text: "Your ID, passport, financial records, and children's documents" },
+      { letter: "C", text: "Your abuser's personal documents as evidence" },
+      { letter: "D", text: "Household items and furniture" }
+    ],
+    correct: "B",
+    explanation: "When leaving quickly, prioritize: government-issued ID, passport, Social Security card, birth certificates (yours and children's), financial records, medications, and any protective orders. These documents are essential for accessing housing, benefits, and legal protection. Sentimental items and furniture can be replaced."
+  },
+  {
+    text: "After leaving an abusive situation, what is an important next step?",
+    options: [
+      { letter: "A", text: "Return to collect remaining belongings as soon as possible, alone" },
+      { letter: "B", text: "Reconnect with your abuser to give them a chance to change" },
+      { letter: "C", text: "Seek support from a domestic violence advocate, shelter, or trusted organization" },
+      { letter: "D", text: "Keep everything private and handle the situation alone" }
+    ],
+    correct: "C",
+    explanation: "After leaving, connecting with a domestic violence advocate or organization provides crucial support — safe housing referrals, legal guidance, counseling, and financial resources. Returning alone can be dangerous; if belongings must be retrieved, do so with law enforcement present. Healing and stability are much harder without professional support."
+  }
+];
+
+let current = 0;
+let answers = Array(questions.length).fill(null);
+let revealed = Array(questions.length).fill(false);
+let selected = null;
+
+function render() {
+  const total = questions.length;
+  const answered = answers.filter(a => a !== null).length;
+  const pct = Math.round((answered / total) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `Question ${current + 1} of ${total}`;
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('progressWrap').style.display = '';
+
+  const q = questions[current];
+  selected = answers[current];
+  const isRevealed = revealed[current];
+
+  const optionsHtml = q.options.map(opt => {
+    let cls = 'option';
+    if (isRevealed) {
+      cls += ' locked';
+      if (opt.letter === q.correct) cls += ' correct-answer';
+      else if (opt.letter === selected && selected !== q.correct) cls += ' wrong-answer';
+    } else if (selected === opt.letter) {
+      cls += ' selected';
+    }
+    return `<button class="${cls}" onclick="selectOption('${opt.letter}', this)">
+      <span class="option-letter">${opt.letter}</span>
+      <span class="option-text">${opt.text}</span>
+    </button>`;
+  }).join('');
+
+  const feedbackHtml = isRevealed
+    ? `<div class="feedback ${selected === q.correct ? 'correct' : 'incorrect'}" style="display:block">
+        <strong>${selected === q.correct ? '✓ Correct!' : '✗ Not quite.'}</strong> ${q.explanation}
+       </div>`
+    : '';
+
+  const isLast = current === total - 1;
+  const nextLabel = isRevealed ? (isLast ? 'Continue' : 'Next Question →') : 'Check Answer';
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="question-card slide-in">
+      <div class="question-number">Question ${current + 1} of ${total}</div>
+      <p class="question-text">${q.text}</p>
+      <div class="options">${optionsHtml}</div>
+      ${feedbackHtml}
+    </div>
+    <div class="nav">
+      ${current > 0 ? `<button class="btn btn-ghost" onclick="goBack()">← Back</button>` : `<div></div>`}
+      <button class="btn btn-primary" id="nextBtn" onclick="goNext()" ${selected || isRevealed ? '' : 'disabled'}>
+        ${nextLabel}
+      </button>
+    </div>
+  `;
+}
+
+function selectOption(letter, el) {
+  if (revealed[current]) return;
+  selected = letter;
+  answers[current] = letter;
+  document.querySelectorAll('.option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function goNext() {
+  if (!selected && !revealed[current]) return;
+  if (!revealed[current]) {
+    revealed[current] = true;
+    render();
+    return;
+  }
+  if (current < questions.length - 1) {
+    current++;
+    render();
+  } else {
+    window.location.href = "/flaskandfurious/recovery/";
+  }
+}
+
+function goBack() {
+  if (current > 0) { current--; render(); }
+}
+
+function showResult() {
+  const score = answers.reduce((acc, a, i) => acc + (a === questions[i].correct ? 1 : 0), 0);
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+
+  let title, message;
+  if (pct === 100) { title = "You are prepared"; message = "You have a solid grasp of the steps to take in an abusive situation. This knowledge is genuinely life-saving — for yourself and for anyone you might support."; }
+  else if (pct >= 60) { title = "You're building the right knowledge"; message = "You understand many of the key steps, but some details are worth reviewing. Read through the answers below — each one matters in a real situation."; }
+  else { title = "This knowledge can be life-changing"; message = "It's okay not to know these steps — most people don't until they need them. Review the answers below carefully. What you learn here could protect you or someone you love."; }
+
+  document.getElementById('progressWrap').style.display = 'none';
+
+  const reviewItems = questions.map((q, i) => {
+    const userAns = answers[i];
+    const isCorrect = userAns === q.correct;
+    const userOpt = q.options.find(o => o.letter === userAns);
+    const correctOpt = q.options.find(o => o.letter === q.correct);
+    return `<div class="review-item">
+      <p class="review-q">${i + 1}. ${q.text}</p>
+      ${!isCorrect ? `<div class="review-answer incorrect"><div class="dot"></div><div>Your answer: ${userOpt ? userOpt.text : 'Not answered'}</div></div>` : ''}
+      <div class="review-answer correct"><div class="dot"></div><div>Correct: ${correctOpt.text}</div></div>
+      <p class="review-explanation">${q.explanation}</p>
+    </div>`;
+  }).join('');
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="result-screen">
+      <div class="score-banner">
+        <div class="score-circle">
+          <div class="score-num">${score}/${total}</div>
+          <div class="score-denom">${pct}%</div>
+        </div>
+        <h2 class="score-title">${title}</h2>
+        <p class="score-message">${message}</p>
+        <button class="restart-btn" onclick="restart()">↺ Try again</button>
+      </div>
+      <div class="review-section">
+        <div class="review-title">Answer Review</div>
+        ${reviewItems}
+      </div>
+    </div>
+  `;
+}
+
+function restart() {
+  current = 0;
+  answers = Array(questions.length).fill(null);
+  revealed = Array(questions.length).fill(false);
+  selected = null;
+  document.getElementById('progressWrap').style.display = '';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

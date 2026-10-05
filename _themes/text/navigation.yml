@@ -1,0 +1,19 @@
+header:
+  - titles:
+      en: CSSE
+    url: /navigation/courses/csse/
+  - titles:
+      en: CSP
+    url: /navigation/courses/csp/
+  - titles:
+      en: CSA
+    url: /navigation/courses/csa/
+  - titles:
+      en: Blog
+    url: /navigation/blogs/
+  - titles:
+      en: Search
+    url: /navigation/search/
+  - titles:
+      en: Login
+    url: /login/

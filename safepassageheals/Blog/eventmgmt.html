@@ -1,0 +1,750 @@
+---
+layout: post
+title: Event Management
+permalink: /sph/eventmgmt/
+show_reading_time: false
+---
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<style>
+  :root {
+    --em-bg:         #ffffff;
+    --em-surface:    #faf8ff;
+    --em-surface2:   #f3effe;
+    --em-border:     #e2d9f3;
+    --em-accent:     #7c3aed;
+    --em-accent2:    #6d28d9;
+    --em-accent-bg:  rgba(124,58,237,0.08);
+    --em-text:       #3b0764;
+    --em-muted:      #7e6a9a;
+    --em-danger:     #dc2626;
+    --em-danger-bg:  rgba(220,38,38,0.08);
+    --em-success:    #16a34a;
+    --em-success-bg: rgba(22,163,74,0.09);
+    --em-radius:     10px;
+    --em-font:       'DM Sans', sans-serif;
+    --em-head-font:  'Syne', 'Arial Black', sans-serif;
+    --em-shadow:     0 1px 4px rgba(124,58,237,0.07), 0 4px 16px rgba(124,58,237,0.06);
+  }
+
+  #event-mgmt-wrapper {
+    font-family: var(--em-font);
+    background: var(--em-bg);
+    min-height: 100vh;
+    padding: 2.5rem 2rem 5rem;
+    color: var(--em-text);
+    width: 100vw;                        
+    margin-left: calc(-50vw + 50%);      
+    box-sizing: border-box;
+  }
+
+  /* ── Header ── */
+  .em-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 2px solid var(--em-border);
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .em-header-left h1 {
+    font-family: var(--em-head-font);
+    font-size: 1.9rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--em-accent);
+    margin: 0 0 4px;
+    line-height: 1;
+  }
+
+  .em-header-left p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--em-muted);
+  }
+
+  .em-badge {
+    display: inline-block;
+    background: var(--em-accent-bg);
+    color: var(--em-accent);
+    border: 1px solid rgba(124,58,237,0.25);
+    border-radius: 20px;
+    font-size: 0.68rem;
+    padding: 2px 10px;
+    margin-left: 8px;
+    vertical-align: middle;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  /* ── Add New Event button ── */
+  .em-btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--em-accent);
+    color: #fff !important;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--em-font);
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 10px 20px;
+    cursor: pointer;
+    text-decoration: none !important;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.28);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    white-space: nowrap;
+  }
+
+  .em-btn-add:hover {
+    background: var(--em-accent2);
+    box-shadow: 0 4px 16px rgba(124,58,237,0.35);
+  }
+
+  .em-btn-add:active { transform: scale(0.97); }
+
+  /* ── Table card ── */
+  .em-table-card {
+    background: var(--em-surface);
+    border: 1px solid var(--em-border);
+    border-radius: var(--em-radius);
+    box-shadow: var(--em-shadow);
+    overflow-x: auto;       /* ← allows horizontal scroll */
+    overflow-y: visible;
+  }
+
+  #eventTable {
+    width: 100% !important;
+    border-collapse: collapse;
+  }
+
+  #eventTable thead tr { background: var(--em-surface2); }
+
+  #eventTable thead th {
+    font-family: var(--em-head-font);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--em-accent);
+    border-bottom: 2px solid var(--em-border);
+    padding: 13px 14px;
+    white-space: nowrap;
+  }
+
+  #eventTable tbody tr {
+    border-bottom: 1px solid var(--em-border);
+    transition: background 0.12s;
+  }
+
+  #eventTable tbody tr:last-child { border-bottom: none; }
+  #eventTable tbody tr:hover { background: rgba(124,58,237,0.04); }
+
+  #eventTable tbody td {
+    padding: 12px 14px;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    color: var(--em-text);
+  }
+
+  .em-title-cell {
+    font-weight: 600;
+    max-width: 180px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--em-accent2);
+  }
+
+  .em-date-badge {
+    display: inline-block;
+    background: var(--em-success-bg);
+    color: var(--em-success);
+    border: 1px solid rgba(22,163,74,0.25);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    white-space: nowrap;
+  }
+
+  .em-time-badge { color: var(--em-muted); font-size: 0.8rem; }
+
+  .em-location-cell {
+    max-width: 140px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--em-muted);
+    font-size: 0.82rem;
+  }
+
+  .em-flyer-thumb {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--em-border);
+  }
+
+  .em-no-flyer {
+    width: 44px;
+    height: 44px;
+    background: var(--em-surface2);
+    border: 1px dashed var(--em-border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--em-muted);
+    font-size: 0.7rem;
+  }
+
+  .em-reg-link {
+    color: var(--em-accent);
+    font-size: 0.78rem;
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .em-reg-link:hover { text-decoration: underline; }
+
+  /* ── Row action buttons ── */
+  .em-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 6px;
+    font-family: var(--em-font);
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: background 0.12s, transform 0.1s;
+  }
+
+  .em-btn:active { transform: scale(0.95); }
+
+  .em-btn-edit {
+    background: var(--em-accent-bg);
+    color: var(--em-accent);
+    border: 1px solid rgba(124,58,237,0.28);
+  }
+
+  .em-btn-edit:hover { background: rgba(124,58,237,0.16); }
+
+  .em-btn-delete {
+    background: var(--em-danger-bg);
+    color: var(--em-danger);
+    border: 1px solid rgba(220,38,38,0.25);
+  }
+
+  .em-btn-delete:hover { background: rgba(220,38,38,0.15); }
+
+  /* ── DataTables toolbar ── */
+  .dataTables_wrapper .dataTables_filter input,
+  .dataTables_wrapper .dataTables_length select {
+    background: var(--em-bg);
+    border: 1px solid var(--em-border);
+    border-radius: 6px;
+    color: var(--em-text);
+    padding: 4px 10px;
+    font-family: var(--em-font);
+    font-size: 0.82rem;
+    outline: none;
+  }
+
+  .dataTables_wrapper .dataTables_filter input:focus,
+  .dataTables_wrapper .dataTables_length select:focus {
+    border-color: var(--em-accent);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+  }
+
+  .dataTables_wrapper .dataTables_filter label,
+  .dataTables_wrapper .dataTables_length label,
+  .dataTables_wrapper .dataTables_info {
+    color: var(--em-muted);
+    font-size: 0.8rem;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: var(--em-bg) !important;
+    border: 1px solid var(--em-border) !important;
+    border-radius: 6px !important;
+    color: var(--em-text) !important;
+    font-size: 0.78rem !important;
+    margin: 0 2px;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: var(--em-accent-bg) !important;
+    color: var(--em-accent) !important;
+    border-color: rgba(124,58,237,0.3) !important;
+  }
+
+  .dataTables_wrapper .dataTables_paginate .paginate_button.current,
+  .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: var(--em-accent) !important;
+    border-color: var(--em-accent) !important;
+    color: #fff !important;
+  }
+
+  /* ── Modal ── */
+  .em-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(59,7,100,0.35);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .em-modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .em-modal {
+    background: var(--em-bg);
+    border: 1px solid var(--em-border);
+    border-radius: 14px;
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 40px rgba(124,58,237,0.18);
+    transform: translateY(18px) scale(0.97);
+    transition: transform 0.2s;
+  }
+
+  .em-modal-overlay.open .em-modal { transform: translateY(0) scale(1); }
+
+  .em-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--em-border);
+    background: var(--em-surface2);
+    border-radius: 14px 14px 0 0;
+  }
+
+  .em-modal-header h2 {
+    font-family: var(--em-head-font);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--em-accent);
+    margin: 0;
+  }
+
+  .em-modal-close {
+    background: none;
+    border: none;
+    color: var(--em-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 3px 7px;
+    border-radius: 5px;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .em-modal-close:hover { background: var(--em-border); color: var(--em-accent); }
+
+  .em-modal-body { padding: 20px 22px; }
+
+  .em-form-group { margin-bottom: 14px; }
+
+  .em-form-group label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--em-muted);
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .em-form-group input,
+  .em-form-group textarea {
+    width: 100%;
+    background: var(--em-surface);
+    border: 1px solid var(--em-border);
+    border-radius: 7px;
+    color: var(--em-text);
+    font-family: var(--em-font);
+    font-size: 0.875rem;
+    padding: 8px 12px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .em-form-group input:focus,
+  .em-form-group textarea:focus {
+    border-color: var(--em-accent);
+    box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+  }
+
+  .em-form-group textarea { resize: vertical; min-height: 80px; }
+
+  .em-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .em-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 22px 18px;
+    border-top: 1px solid var(--em-border);
+    background: var(--em-surface);
+    border-radius: 0 0 14px 14px;
+  }
+
+  .em-btn-cancel {
+    background: transparent;
+    color: var(--em-muted);
+    border: 1px solid var(--em-border);
+    border-radius: 7px;
+    font-family: var(--em-font);
+    font-size: 0.84rem;
+    font-weight: 500;
+    padding: 7px 18px;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+
+  .em-btn-cancel:hover {
+    background: var(--em-surface2);
+    color: var(--em-accent);
+    border-color: rgba(124,58,237,0.3);
+  }
+
+  .em-btn-save {
+    background: var(--em-accent);
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-family: var(--em-font);
+    font-size: 0.84rem;
+    font-weight: 700;
+    padding: 7px 22px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(124,58,237,0.25);
+    transition: background 0.12s, box-shadow 0.12s;
+  }
+
+  .em-btn-save:hover {
+    background: var(--em-accent2);
+    box-shadow: 0 4px 14px rgba(124,58,237,0.3);
+  }
+
+  /* ── Toast ── */
+  .em-toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--em-bg);
+    border: 1px solid var(--em-border);
+    border-radius: 10px;
+    color: var(--em-text);
+    font-family: var(--em-font);
+    font-size: 0.83rem;
+    font-weight: 500;
+    padding: 11px 20px;
+    z-index: 2000;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: transform 0.25s, opacity 0.25s;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    box-shadow: 0 6px 24px rgba(124,58,237,0.15);
+    pointer-events: none;
+  }
+
+  .em-toast.show   { transform: translateY(0); opacity: 1; }
+  .em-toast.success { border-left: 4px solid var(--em-success); }
+  .em-toast.error   { border-left: 4px solid var(--em-danger); }
+
+  /* ── Empty / spinner ── */
+  .em-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--em-muted);
+  }
+
+  .em-empty i { font-size: 2.2rem; margin-bottom: 1rem; color: var(--em-border); display: block; }
+
+  .em-spinner {
+    width: 22px;
+    height: 22px;
+    border: 2.5px solid var(--em-border);
+    border-top-color: var(--em-accent);
+    border-radius: 50%;
+    animation: em-spin 0.7s linear infinite;
+    margin: 2rem auto;
+  }
+
+  @keyframes em-spin { to { transform: rotate(360deg); } }
+</style>
+
+<div id="event-mgmt-wrapper">
+
+  <div class="em-header">
+    <div class="em-header-left">
+      <h1>Event Manager <span class="em-badge">Admin</span></h1>
+      <p>View, edit, and remove events from the database</p>
+    </div>
+    <a href="{{ site.baseurl }}/blog/post" class="em-btn-add">
+      <i class="fa fa-plus"></i> Add New Event
+    </a>
+  </div>
+
+  <div class="em-table-card">
+    <table class="table" id="eventTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Title</th>
+          <th>Date</th>
+          <th>Time</th>
+          <th>Location</th>
+          <th>Flyer</th>
+          <th>Registration</th>
+          <th>Writeup</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="eventTableBody">
+        <tr><td colspan="9"><div class="em-spinner"></div></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- Edit Modal -->
+<div class="em-modal-overlay" id="editModal">
+  <div class="em-modal">
+    <div class="em-modal-header">
+      <h2><i class="fa fa-pen" style="font-size:0.85rem;margin-right:8px;"></i>Edit Event</h2>
+      <button class="em-modal-close" id="modalClose"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="em-modal-body">
+      <input type="hidden" id="editId">
+      <div class="em-form-group">
+        <label>Event Title</label>
+        <input type="text" id="editTitle" placeholder="e.g. Science Fair 2025">
+      </div>
+      <div class="em-form-row">
+        <div class="em-form-group">
+          <label>Date</label>
+          <input type="date" id="editDate">
+        </div>
+        <div class="em-form-group">
+          <label>Time</label>
+          <input type="time" id="editTime">
+        </div>
+      </div>
+      <div class="em-form-group">
+        <label>Location</label>
+        <input type="text" id="editLocation" placeholder="e.g. Main Auditorium">
+      </div>
+      <div class="em-form-group">
+        <label>Registration Link</label>
+        <input type="url" id="editRegistration" placeholder="https://...">
+      </div>
+      <div class="em-form-group">
+        <label>Writeup / Description</label>
+        <textarea id="editWriteup" rows="4" placeholder="Describe the event..."></textarea>
+      </div>
+    </div>
+    <div class="em-modal-footer">
+      <button class="em-btn-cancel" id="modalCancel">Cancel</button>
+      <button class="em-btn-save" id="modalSave"><i class="fa fa-save"></i> Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="em-toast" id="emToast"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+ 
+  const BACKEND = 'https://flaskandfurious.opencodingsociety.com/';
+
+  let dtTable = null;
+  let eventsCache = [];
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('emToast');
+    t.className = `em-toast ${type}`;
+    t.innerHTML = `<i class="fa ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"
+                     style="color:${type === 'success' ? 'var(--em-success)' : 'var(--em-danger)'}"></i> ${msg}`;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3200);
+  }
+
+  function renderTable(events) {
+    const tbody = document.getElementById('eventTableBody');
+
+    if (!events.length) {
+      tbody.innerHTML = `<tr><td colspan="9">
+        <div class="em-empty">
+          <i class="fa fa-calendar-times"></i>
+          <p>No events found.</p>
+        </div>
+      </td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = events.map(ev => {
+      const flyerHtml = ev.flyer
+        ? `<img src="${BACKEND}${ev.flyer}" class="em-flyer-thumb" alt="Flyer">`
+        : `<div class="em-no-flyer"><i class="fa fa-image"></i></div>`;
+
+      const regHtml = ev.registration
+        ? `<a href="${ev.registration}" target="_blank" class="em-reg-link">
+             <i class="fa fa-external-link-alt"></i> Link
+           </a>`
+        : `<span style="color:var(--em-muted)">—</span>`;
+
+      const writeupShort = ev.writeup
+        ? `<span title="${ev.writeup.replace(/"/g,'&quot;')}"
+               style="max-width:130px;display:inline-block;white-space:nowrap;
+                      overflow:hidden;text-overflow:ellipsis;font-size:0.78rem;
+                      color:var(--em-muted)">${ev.writeup}</span>`
+        : `<span style="color:var(--em-muted)">—</span>`;
+
+      return `<tr id="ev-row-${ev.id}">
+        <td style="color:var(--em-muted);font-size:0.78rem;font-weight:600;">#${ev.id}</td>
+        <td class="em-title-cell" title="${ev.title}">${ev.title}</td>
+        <td><span class="em-date-badge">${ev.event_date || '—'}</span></td>
+        <td><span class="em-time-badge">${ev.event_time || '—'}</span></td>
+        <td class="em-location-cell" title="${ev.location || ''}">${ev.location || '—'}</td>
+        <td>${flyerHtml}</td>
+        <td>${regHtml}</td>
+        <td>${writeupShort}</td>
+        <td style="white-space:nowrap;">
+          <button class="em-btn em-btn-edit" onclick="openEdit(${ev.id})">
+            <i class="fa fa-pen"></i> Edit
+          </button>
+          <button class="em-btn em-btn-delete" onclick="deleteEvent(${ev.id})" style="margin-left:5px;">
+            <i class="fa fa-trash"></i> Delete
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    if (dtTable) dtTable.destroy();
+    dtTable = $('#eventTable').DataTable({
+      pageLength: 10,
+      order: [[2, 'asc']],
+      columnDefs: [{ orderable: false, targets: [5, 6, 7, 8] }],
+      language: { emptyTable: "No events to display.", search: "Search:" }
+    });
+  }
+
+  async function loadEvents() {
+    try {
+      const res = await fetch(`${BACKEND}/api/events`);
+      if (!res.ok) throw new Error('Failed to load events');
+      eventsCache = await res.json();
+      renderTable(eventsCache);
+    } catch (err) {
+      document.getElementById('eventTableBody').innerHTML =
+        `<tr><td colspan="9" style="color:var(--em-danger);text-align:center;padding:2rem;">
+           <i class="fa fa-exclamation-triangle"></i> ${err.message}
+         </td></tr>`;
+    }
+  }
+
+  async function deleteEvent(id) {
+    if (!confirm(`Delete event #${id}? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${BACKEND}/api/events/delete/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Delete failed');
+      showToast('Event deleted successfully.');
+      loadEvents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  function openEdit(id) {
+    const ev = eventsCache.find(e => e.id === id);
+    if (!ev) return;
+    document.getElementById('editId').value           = ev.id;
+    document.getElementById('editTitle').value        = ev.title        || '';
+    document.getElementById('editDate').value         = ev.event_date   || '';
+    document.getElementById('editTime').value         = ev.event_time   || '';
+    document.getElementById('editLocation').value     = ev.location     || '';
+    document.getElementById('editRegistration').value = ev.registration || '';
+    document.getElementById('editWriteup').value      = ev.writeup      || '';
+    document.getElementById('editModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('editModal').classList.remove('open');
+  }
+
+  document.getElementById('modalClose').addEventListener('click', closeModal);
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  document.getElementById('modalSave').addEventListener('click', async function () {
+    const id           = document.getElementById('editId').value;
+    const title        = document.getElementById('editTitle').value.trim();
+    const event_date   = document.getElementById('editDate').value.trim();
+    const event_time   = document.getElementById('editTime').value.trim();
+    const location     = document.getElementById('editLocation').value.trim();
+    const registration = document.getElementById('editRegistration').value.trim();
+    const writeup      = document.getElementById('editWriteup').value.trim();
+
+    if (!title || !event_date) { showToast('Title and date are required.', 'error'); return; }
+
+    this.disabled = true;
+    this.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res = await fetch(`${BACKEND}/api/events/update/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, event_date, event_time, location, registration, writeup })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Update failed');
+      showToast('Event updated successfully.');
+      closeModal();
+      loadEvents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      this.disabled = false;
+      this.innerHTML = '<i class="fa fa-save"></i> Save Changes';
+    }
+  });
+
+  loadEvents();
+</script>

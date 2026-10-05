@@ -1,0 +1,42 @@
+@import 'root-color-map.scss';
+@import "mixins/variables";
+@import "base/typography";
+@import "bathroom";
+@import "blogs";
+@import "calendar";
+@import "chatbot";
+@import "forms/code-runner";
+@import "forms/ui-runner";
+@import "forms/game-runner";
+@import "forms/pause-modal";
+@import "forms/leaderboard";
+@import "forms/game-engine";
+@import "forms/game-builder";
+@import "hacks";
+@import "hacks_lxd";
+@import "hallpass";
+@import "microblog";
+@import "grading";
+@import "navbar";
+@import "platformer-game";
+@import "quiz";
+@import "rps_lesson";
+@import "search";
+@import "user-preferences";
+// aesthetihawk stuff
+@import "materials/main.scss";
+@import "elements/main.scss";
+@import "natm-2025-tri1.scss";
+@import "timeline";
+@import "lesson-player";
+@import "documentation";
+@import "../capstone/rcr_poway_midland";
+
+
+html,
+body,
+input,
+textarea,
+select {
+    background-color: $background;
+}

@@ -1,0 +1,628 @@
+---
+layout: post
+permalink: /recovery/
+title: A Path to Recovery
+show_reading_time: false
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>A Path to Recovery</title>
+<style>
+#game-wrapper{position:relative;width:100%;background:#fff;color:#000;font-family:Arial,sans-serif;user-select:none;overflow:hidden}
+canvas{display:block;width:100%}
+#hud{position:absolute;top:0;left:0;right:0;height:22px;background:#fff;border-bottom:1px solid #ccc;display:flex;align-items:center;padding:0 8px;z-index:5;font-size:11px}
+.overlay{position:absolute;inset:0;background:#f5f5f5;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;text-align:center;padding:20px;}
+.overlay.hidden{display:none}
+button{font-family:Arial,sans-serif;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="game-wrapper">
+
+<div id="hud">
+  <span id="hd-lvl">A Path to Recovery Interactive Simulation</span>
+  <span style="margin-left:auto">WASD / arrow keys = Move &nbsp;&nbsp; E = Interact &nbsp;&nbsp; ESC = Close</span>
+</div>
+
+<canvas id="canvas"></canvas>
+
+
+<div id="overlay" class="overlay"></div>
+
+<script>
+const OSI = [
+  { id:1, key:'s1', text: 'Hello, if you\'re going through something difficult right now, the first thing to know is that you\'re not alone. A really good place to start is by calling the National Domestic Violence Hotline. You don\'t need to have everything figured out — you can just talk, and someone will be there to listen and support you.', link:'https://www.thehotline.org/', linkLabel:'thehotline.org' },
+  { id:2, key:'s2', text: 'Ok, now that you\'re connected with someone, just take a deep breath and explain what\'s been happening. There\'s no right or wrong way to say it — just be honest about your situation and how you feel. The person on the other end is there to help, not judge.', link:'https://www.thehotline.org/get-help/', linkLabel:'thehotline.org/get-help' },
+  { id:3, key:'s3', text: 'After you\'ve shared your story, the next step is getting connected to support near you. This could be local shelters, counseling, or support groups where people understand what you\'re going through. It can really help to have others by your side during this time.', link:'https://www.thehotline.org/resources/', linkLabel:'thehotline.org/resources' },
+  { id:4, key:'s4', text: 'As you start thinking about moving forward, healing takes time — and that\'s completely okay. Programs like Safe Passage Heals offer workshops and events that can help you rebuild and feel stronger again. Taking small steps here can make a big difference over time.', link:'https://safepassageheals.org/', linkLabel:'safepassageheals.org' },
+  { id:5, key:'s5', text: 'If you need a safe place to stay, domestic violence shelters provide emergency housing, meals, and support services. You and your children can stay confidentially and begin rebuilding in a secure environment.', link:'https://www.thehotline.org/resources/', linkLabel:'thehotline.org/resources' },
+  { id:6, key:'s6', text: 'Once you\'re in a safe place, legal protections are available to you. A restraining or protective order can legally require an abuser to stay away. Local legal aid organizations can help you file at no cost, and many courthouses have advocates who walk you through the process.', link:'https://www.womenslaw.org/', linkLabel:'womenslaw.org' },
+  { id:7, key:'s7', text: 'Long-term healing often includes therapy or counseling. Trauma-informed therapists can help you process your experience and build resilience. Many community organizations offer free or sliding-scale mental health services for survivors.', link:'https://safepassageheals.org/', linkLabel:'safepassageheals.org' },
+  { id:8, key:'s8', text: 'Building a support network of trusted friends, family, or community members is a powerful part of recovery. You don\'t have to go through this alone — connecting with others who care about you helps restore a sense of safety and belonging as you move forward.', link:'https://safepassageheals.org/', linkLabel:'safepassageheals.org' },
+];
+
+const bgImg = new Image();
+bgImg.src = '{{ site.baseurl }}/safepassageheals/gamify/gamify3.png';
+const chillguyImg = new Image();
+chillguyImg.crossOrigin = 'anonymous';
+chillguyImg.src = 'https://i.postimg.cc/Y2GqBzMD/image-removebg-preview.png';
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+const HUD_H  = 22, PANEL_H = 100;
+const IMG_RATIO = 857 / 1399;
+
+function resize() {
+  const wrapper = document.getElementById('game-wrapper');
+  const cw = wrapper.offsetWidth || window.innerWidth;
+  const ratio = (bgImg.naturalWidth && bgImg.naturalHeight) ? bgImg.naturalHeight / bgImg.naturalWidth : IMG_RATIO;
+  const ch = Math.round(cw * ratio);
+  canvas.width  = cw;
+  canvas.height = ch;
+  canvas.style.marginTop = HUD_H + 'px';
+  wrapper.style.height = (ch + HUD_H + PANEL_H) + 'px';
+}
+resize();
+bgImg.onload = () => { resize(); if (GS && GS.screen === 'level1') initLevel(); };
+window.addEventListener('resize', () => { resize(); if (GS.screen==='level1') initLevel(); });
+
+const SPRITE = { frameW: 398/3, frameH: 638/4, scale: 0.5, animRate: 15, dir: 'down', frameIdx: 0, frameTimer: 0, cols: 3 };
+const P = { x:60, y:0, w:(398/3)*0.5, h:(638/4)*0.5, speed:2.0, vx:0, vy:0, moving:false };
+
+const GS = { screen:'title', visited:new Set(), nearNpc:null, tick:0, speechBubble:null };
+
+const HUMAN_POSITIONS = [
+  {fx:0.154, fy:0.435},
+  {fx:0.222, fy:0.667},
+  {fx:0.440, fy:0.733},
+  {fx:0.634, fy:0.426},
+  {fx:0.824, fy:0.374},
+  {fx:0.847, fy:0.730},
+  {fx:0.356, fy:0.343},
+  {fx:0.330, fy:0.700},
+];
+
+// AI Chatbot node position
+const CHATBOT_NODE = { fx: 0.52, fy: 0.13, radius: 44 };
+let nearChatbot = false;
+
+let npcs = [], exit = null;
+
+function makeLevelNpcs(layers) {
+  const cw = canvas.width, ch = canvas.height;
+  return layers.map((layer, i) => {
+    const pos = HUMAN_POSITIONS[i];
+    return { ...layer, x: cw * pos.fx, y: ch * pos.fy, radius: 55, visited: GS.visited.has(layer.key) };
+  });
+}
+
+function initLevel() {
+  const cw = canvas.width, ch = canvas.height;
+  P.x = 70; P.y = ch * 0.5; P.vx = 0; P.vy = 0;
+  GS.nearNpc = null;
+  npcs = makeLevelNpcs(OSI);
+  exit = { x: cw - 44, y: 70, w: 44, h: 64, active: false };
+  refreshProgress();
+  setPanel('Move with WASD / arrow keys. Approach figures and press <strong>E</strong> to interact.');
+}
+
+function refreshProgress() {
+  // Make exit always active
+  if (exit) exit.active = true;
+}
+
+const keys = {};
+window.addEventListener('keydown', e => { keys[e.code] = true; onKey(e.code); });
+window.addEventListener('keyup',   e => { keys[e.code] = false; });
+
+function onKey(code) {
+  if (code === 'Enter' && GS.screen === 'title') { startLevel(); return; }
+  if (code === 'KeyE' && GS.screen === 'level1') {
+    // Check if near AI chatbot node
+    const cw = canvas.width, ch = canvas.height;
+    const chatX = cw * CHATBOT_NODE.fx;
+    const chatY = ch * CHATBOT_NODE.fy;
+    const dist = Math.hypot(P.x - chatX, P.y - chatY);
+    if (dist < CHATBOT_NODE.radius + 10) {
+      document.getElementById('chatModalAI').classList.add('open');
+      setTimeout(() => { document.getElementById('messageInputAI').focus(); }, 200);
+      return;
+    }
+    // Otherwise, check for NPCs
+    const npc = nearestNpc();
+    if (!npc) return;
+    GS.visited.add(npc.key);
+    npc.visited = true;
+    refreshProgress();
+    if (npc.key === 's7') {
+      GS.speechBubble = { npc, text: "Experiencing domestic abuse can be overwhelming, but you are not alone. Continue along this path to understand how to get the support you need in this process" };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's3') {
+      GS.speechBubble = { npc, text: "The first thing you should do when experiencing abuse is to call the hotline or get help from a trusted adult. Click on Learn More to learn about the first steps to take after experiencing domestic abuse. After your finish, proceed to the phone icon to contact the domestic abuse hotline or proceed to the woman in the yellow dress to speak to a trusted person", button: { label: "Learn More", url: "/flaskandfurious/quiz2/" } };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's8') {
+      GS.speechBubble = { npc, text: "Call the National Domestic Violence Hotline (1-800-799-7233) to have a confidential talk. Make sure to describe your situation and provide evidence so they can listen and help you figure out your next steps safely. Click on Learn More to access the hotline website.", button: { label: "Learn More", url: "https://www.thehotline.org/resources/" }};
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's2') {
+      GS.speechBubble = { npc, text: "Talk to a trusted friend, adult, family member, or counselor about your situation because you're not alone. They can help you get support, provide comfort, and assist you in figuring out your next steps." };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's6') {
+      GS.speechBubble = { npc, text: "Here is to starting your journey towards healing! Click on Learn More to choose programs that would support your needs at Safe Passage Heals", button: { label: "Learn More", url: "/flaskandfurious/quiz3/" } };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's1') {
+      GS.speechBubble = { npc, text: "Have you experienced physical, emotional, or verbal harm in your relationship?\n Click on learn more to understand if you or someone you know is experiencing domestic abuse.", button: { label: "Learn More", url: "/flaskandfurious/quiz1/" } };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's4') {
+      GS.speechBubble = { npc, text: "Healing takes time, but there are resources like domestic violence shleters that provide emergency housing, meals and support services. You and/or anyone who may need to can stay confidentially and begin rebuilding in a secure environment. Visit the counselor on the right for more information on programs focused on rebuilding your life."  };
+      startTyping(GS.speechBubble.text);
+    } else if (npc.key === 's5') {
+      GS.speechBubble = { npc, text: "When finding your path to recovery, programs like Safe Passage Heals offer workshops and events to help you rebuild and feel stronger. Taking small steps here can make a big difference over time.", button: { label: "Learn More", url: "https://safepassageheals.org/" }};
+      startTyping(GS.speechBubble.text);
+    } else {
+      GS.speechBubble = null;
+    }
+    setPanel('Hello! ' + npc.text + ' &bull; <a href="' + npc.link + '" target="_blank" rel="noopener noreferrer">' + npc.linkLabel + '</a>');
+  }
+}
+
+function showScreen(html) { const ov = document.getElementById('overlay'); ov.className = 'overlay'; ov.innerHTML = html; }
+function hideOverlay() { document.getElementById('overlay').className = 'overlay hidden'; }
+
+function showTitle() {
+  GS.screen = 'title';
+  showScreen(
+    '<div style="background:rgba(255,255,255,0.92);padding:28px 36px;border-radius:12px;max-width:420px;">' +
+    '<h2 style="margin:0 0 10px;font-size:18px;">A Path to Recovery</h2>' +
+    '<p style="font-size:13px;margin:0 0 16px;">Interactive simulation guiding you through the steps after domestic abuse.</p>' +
+    '<button id="btn-init" style="padding:14px 40px;font-size:16px;background:#7F77DD;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:500;">Start</button>' +
+    '<p style="font-size:11px;margin-top:12px;color:#555">WASD / arrow keys to move &nbsp; E to interact</p>' +
+    '</div>'
+  );
+  document.getElementById('btn-init').onclick = () => startLevel();
+}
+
+function startLevel() { GS.screen = 'level1'; GS.visited = new Set(); hideOverlay(); initLevel(); }
+function setPanel(html) { }
+
+function nearestNpc() {
+  let best=null, bestD=Infinity;
+  for (const n of npcs) {
+    const d = Math.hypot(P.x-n.x, P.y-n.y);
+    if (d < n.radius && d < bestD) { best=n; bestD=d; }
+  }
+  return best;
+}
+
+function getPlayerFrame() {
+  const rowMap = { down:0, left:1, right:2, up:3 };
+  const row = rowMap[SPRITE.dir] ?? 0;
+  return { row, col: SPRITE.frameIdx % SPRITE.cols };
+}
+
+function updateSprite() {
+  const moving = P.vx !== 0 || P.vy !== 0;
+  P.moving = moving;
+  if (P.vy < 0) SPRITE.dir = 'up';
+  else if (P.vy > 0) SPRITE.dir = 'down';
+  else if (P.vx < 0) SPRITE.dir = 'left';
+  else if (P.vx > 0) SPRITE.dir = 'right';
+  if (moving) {
+    SPRITE.frameTimer++;
+    if (SPRITE.frameTimer >= SPRITE.animRate) { SPRITE.frameTimer = 0; SPRITE.frameIdx = (SPRITE.frameIdx + 1) % SPRITE.cols; }
+  } else { SPRITE.frameIdx = 0; SPRITE.frameTimer = 0; }
+}
+
+function drawPlayer() {
+  if (!chillguyImg.complete || chillguyImg.naturalWidth === 0) {
+    ctx.beginPath(); ctx.arc(P.x,P.y,10,0,Math.PI*2); ctx.fillStyle='#7F77DD'; ctx.fill(); return;
+  }
+  const { row, col } = getPlayerFrame();
+  const sw = SPRITE.frameW, sh = SPRITE.frameH;
+  const dw = sw * SPRITE.scale, dh = sh * SPRITE.scale;
+  ctx.drawImage(chillguyImg, col*sw, row*sh, sw, sh, P.x-dw/2, P.y-dh/2, dw, dh);
+}
+
+function update() {
+  GS.tick++;
+  if (GS.screen !== 'level1') return;
+  P.vx=0; P.vy=0;
+  if (keys['KeyW']||keys['ArrowUp'])    P.vy=-P.speed;
+  if (keys['KeyS']||keys['ArrowDown'])  P.vy=+P.speed;
+  if (keys['KeyA']||keys['ArrowLeft'])  P.vx=-P.speed;
+  if (keys['KeyD']||keys['ArrowRight']) P.vx=+P.speed;
+  if (P.vx&&P.vy) { P.vx*=0.707; P.vy*=0.707; }
+  P.x = Math.max(P.w/2, Math.min(canvas.width -P.w/2, P.x+P.vx));
+  P.y = Math.max(P.h/2, Math.min(canvas.height-P.h/2, P.y+P.vy));
+  updateSprite();
+  if (exit?.active) {
+    const ex=exit;
+    if (Math.abs(P.x-ex.x)<ex.w/2 && Math.abs(P.y-ex.y)<ex.h/2) { window.location.href='/flaskandfurious/'; return; }
+  }
+  const near = nearestNpc();
+  if (GS.speechBubble && (!near || (near.key !== 's7' && near.key !== 's3' && near.key !== 's8' && near.key !== 's2' && near.key !== 's1' && near.key !== 's6' && near.key !== 's4' && near.key !== 's5'))) {    GS.speechBubble = null;
+  }
+  if (near !== GS.nearNpc) {
+    GS.nearNpc = near;
+    if (!near) setPanel('Move with WASD. Approach figures and press <strong>E</strong> to interact.');
+    else setPanel((near.visited ? 'Revisit: ' : 'Press <strong>E</strong> to interact'));
+  }
+}
+
+const HALO_COLOR = '127,119,221';
+
+function drawHalo(x, y, r, visited, nearRadius, tick) {
+  const pulse = r + (nearRadius ? Math.sin(tick*0.12)*4 : 0);
+  const grad = ctx.createRadialGradient(x,y,pulse*0.15,x,y,pulse);
+  grad.addColorStop(0, `rgba(${HALO_COLOR},0.20)`);
+  grad.addColorStop(1, `rgba(${HALO_COLOR},0.0)`);
+  ctx.beginPath(); ctx.arc(x,y,pulse,0,Math.PI*2);
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.strokeStyle = `rgba(${HALO_COLOR},0.45)`; ctx.lineWidth = 2; ctx.stroke();
+  return pulse;
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const lines = text.split('\n');
+  for (let i = 0; i < lines.length; i++) {
+    let words = lines[i].split(' '), line = '';
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      if (ctx.measureText(testLine).width > maxWidth && n > 0) { ctx.fillText(line, x, y); line = words[n] + ' '; y += lineHeight; }
+      else line = testLine;
+    }
+    ctx.fillText(line, x, y); y += lineHeight;
+  }
+}
+
+let speechBubbleOkBtn = null;
+let typedText = '';
+let typingInterval = null;
+let typingDone = false;
+
+function startTyping(fullText) {
+  typedText = ''; typingDone = false;
+  if (typingInterval) clearInterval(typingInterval);
+  let i = 0;
+  typingInterval = setInterval(() => {
+    typedText += fullText[i]; i++;
+    if (i >= fullText.length) { clearInterval(typingInterval); typingInterval = null; typingDone = true; }
+  }, 28);
+}
+
+function drawSpeechBubble(x, y, text) {
+  let padding = 22, width = 420, height = 140, radius = 24;
+  // Make speech bubbles for s3, s8, s4 much bigger
+  if (GS.speechBubble && GS.speechBubble.npc) {
+    if (GS.speechBubble.npc.key === 's3') {
+      width = 700;
+      height = 180;
+      padding = 32;
+      radius = 32;
+    } else if (['s8', 's4'].includes(GS.speechBubble.npc.key)) {
+      width = 540;
+      height = 180;
+      padding = 28;
+      radius = 28;
+    }
+  }
+  x = Math.max(10, Math.min(canvas.width - width - 10, x));
+  y = Math.max(32, Math.min(canvas.height - height - 10, y));
+  ctx.save();
+
+  ctx.beginPath();
+  ctx.moveTo(x + 32, y - 32); ctx.lineTo(x, y); ctx.lineTo(x + 56, y - 32);
+  ctx.closePath(); ctx.fillStyle = 'white'; ctx.globalAlpha = 0.98; ctx.fill(); ctx.globalAlpha = 1;
+
+  ctx.beginPath();
+  ctx.roundRect(x, y - 32, width, height, radius);
+  ctx.closePath(); ctx.fillStyle = 'white'; ctx.globalAlpha = 0.98;
+  ctx.shadowColor = '#888'; ctx.shadowBlur = 8; ctx.fill();
+  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+  ctx.strokeStyle = '#888'; ctx.lineWidth = 2.5; ctx.stroke();
+
+  ctx.fillStyle = '#222'; ctx.font = '16px Arial'; ctx.textAlign = 'left';
+  wrapText(ctx, typedText, x + padding, y - 32 + padding + 12, width - 2 * padding, 22);
+
+  const btnW = 48, btnH = 24;
+  const btnX = x + width - btnW - 18;
+  const btnY = y - 32 + height - btnH - 10;
+
+  // Draw "Learn More" button if present
+  if (GS.speechBubble && GS.speechBubble.button) {
+    const lbtnW = 120, lbtnH = 24;
+    const lbtnX = x + 18;
+    const lbtnY = btnY;
+    ctx.save();
+    ctx.beginPath();
+    ctx.roundRect(lbtnX, lbtnY, lbtnW, lbtnH, 8);
+    ctx.fillStyle = '#5b4fcf'; ctx.globalAlpha = 0.93; ctx.fill();
+    ctx.globalAlpha = 1; ctx.strokeStyle = '#3d35a0'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(GS.speechBubble.button.label, lbtnX + lbtnW/2, lbtnY + lbtnH/2);
+    ctx.restore();
+    window._speechLinkBtn = { x: lbtnX, y: lbtnY, w: lbtnW, h: lbtnH };
+  } else {
+    window._speechLinkBtn = null;
+  }
+
+  // Draw OK button
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(btnX, btnY, btnW, btnH, 8);
+  ctx.fillStyle = '#7F77DD'; ctx.globalAlpha = 0.93; ctx.fill();
+  ctx.globalAlpha = 1; ctx.strokeStyle = '#5b4fcf'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('OK', btnX + btnW/2, btnY + btnH/2);
+  ctx.restore();
+
+  speechBubbleOkBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+  ctx.restore();
+}
+
+canvas.addEventListener('click', function(e) {
+  if (!GS.speechBubble || !speechBubbleOkBtn) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (canvas.width / rect.width);
+  const my = (e.clientY - rect.top) * (canvas.height / rect.height);
+  if (window._speechLinkBtn) {
+    const lb = window._speechLinkBtn;
+    if (mx >= lb.x && mx <= lb.x + lb.w && my >= lb.y && my <= lb.y + lb.h) {
+      window.location.href = GS.speechBubble.button.url;
+      return;
+    }
+  }
+  const btn = speechBubbleOkBtn;
+  if (mx >= btn.x && mx <= btn.x + btn.w && my >= btn.y && my <= btn.y + btn.h) {
+    GS.speechBubble = null; speechBubbleOkBtn = null;
+    typedText = ''; typingDone = false;
+    if (typingInterval) { clearInterval(typingInterval); typingInterval = null; }
+  }
+});
+
+function render() {
+  if (GS.screen !== 'level1') return;
+  const cw=canvas.width, ch=canvas.height, t=GS.tick;
+
+  if (bgImg.complete && bgImg.naturalWidth>0) { ctx.drawImage(bgImg,0,0,cw,ch); }
+  else { ctx.fillStyle='#e8e8f0'; ctx.fillRect(0,0,cw,ch); }
+
+  for (const npc of npcs) {
+    const d = Math.hypot(P.x-npc.x, P.y-npc.y);
+    const nr = d < npc.radius;
+    const pulse = drawHalo(npc.x, npc.y, npc.radius*0.55, npc.visited, nr, t);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(npc.x, npc.y, 22, 0, Math.PI*2);
+    ctx.fillStyle = npc.visited ? 'rgba(189,183,247,0.18)' : 'rgba(127,119,221,0.18)';
+    ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.restore();
+    if (nr && Math.sin(t*0.13)>0) {
+      ctx.textAlign='center'; ctx.font='10px Arial'; ctx.fillStyle='#fff';
+      ctx.strokeStyle='rgba(0,0,0,0.7)'; ctx.lineWidth=2.5;
+      const hint = npc.visited ? '[E: Revisit]' : '[E: Interact]';
+      ctx.strokeText(hint, npc.x, npc.y+pulse+14); ctx.fillText(hint, npc.x, npc.y+pulse+14);
+    }
+  }
+
+  // Draw AI Chatbot node — with same animations as purple NPCs
+  const chatX = cw * CHATBOT_NODE.fx;
+  const chatY = ch * CHATBOT_NODE.fy;
+  const chatDist = Math.hypot(P.x - chatX, P.y - chatY);
+  const chatNear = chatDist < CHATBOT_NODE.radius;
+  const ORANGE = '234,140,51';
+
+  // 1. Pulsing radial gradient halo
+  const chatPulse = CHATBOT_NODE.radius * 0.55 + (chatNear ? Math.sin(t * 0.12) * 4 : 0);
+  const chatGrad = ctx.createRadialGradient(chatX, chatY, chatPulse * 0.15, chatX, chatY, chatPulse);
+  chatGrad.addColorStop(0, `rgba(${ORANGE},0.20)`);
+  chatGrad.addColorStop(1, `rgba(${ORANGE},0.0)`);
+  ctx.beginPath(); ctx.arc(chatX, chatY, chatPulse, 0, Math.PI * 2);
+  ctx.fillStyle = chatGrad; ctx.fill();
+  ctx.strokeStyle = `rgba(${ORANGE},0.45)`; ctx.lineWidth = 2; ctx.stroke();
+
+  // 2. Inner circle
+  ctx.save();
+  ctx.beginPath(); ctx.arc(chatX, chatY, 22, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(234,140,51,0.18)'; ctx.fill();
+  ctx.restore();
+
+  // 3. Flashing [E: Chat] hint when nearby
+  if (chatNear && Math.sin(t * 0.13) > 0) {
+    ctx.textAlign = 'center'; ctx.font = '10px Arial'; ctx.fillStyle = '#fff';
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 2.5;
+    ctx.strokeText('[E: Chat]', chatX, chatY + chatPulse + 14);
+    ctx.fillText('[E: Chat]', chatX, chatY + chatPulse + 14);
+  }
+
+  if (exit) {
+    const ex=exit, active=ex.active;
+    ctx.fillStyle = active ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)';
+    ctx.fillRect(ex.x-ex.w/2,ex.y-ex.h/2,ex.w,ex.h);
+    ctx.strokeStyle = active ? '#222' : '#aaa'; ctx.lineWidth=2;
+    ctx.strokeRect(ex.x-ex.w/2,ex.y-ex.h/2,ex.w,ex.h);
+    ctx.textAlign='center'; ctx.fillStyle = active ? '#000' : '#aaa';
+    ctx.font='bold 9px Arial'; ctx.fillText('EXIT',ex.x,ex.y-10);
+    ctx.font='8px Arial';
+    if (active) { if (Math.sin(t*0.09)>0) { ctx.fillStyle='#000'; ctx.fillText('[ENTER]',ex.x,ex.y+14); } }
+    else { const rem = OSI.filter(l=>!GS.visited.has(l.key)).length; ctx.fillStyle='#aaa'; ctx.fillText(rem+' left',ex.x,ex.y+6); }
+  }
+
+  if (GS.speechBubble && GS.speechBubble.npc && (
+    GS.speechBubble.npc.key === 's7' ||
+    GS.speechBubble.npc.key === 's3' ||
+    GS.speechBubble.npc.key === 's8' ||
+    GS.speechBubble.npc.key === 's2' ||
+    GS.speechBubble.npc.key === 's1' ||
+    GS.speechBubble.npc.key === 's6' ||
+    GS.speechBubble.npc.key === 's4' ||
+    GS.speechBubble.npc.key === 's5')) {
+    const ox = GS.speechBubble.npc.key === 's6' ? -430 : (GS.speechBubble.ox ?? 30);
+    const oy = GS.speechBubble.oy ?? -140;
+    drawSpeechBubble(GS.speechBubble.npc.x + ox, GS.speechBubble.npc.y + oy, GS.speechBubble.text);
+  }
+
+  drawPlayer();
+}
+
+function loop() { update(); render(); requestAnimationFrame(loop); }
+startLevel();
+loop();
+</script>
+
+<!-- AI Chatbot Modal (hidden, triggered by E key near the AI node) -->
+<style>
+.chat-modal-ai {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 400px;
+  height: 550px;
+  background: #181818;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.18);
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1.5px solid #ea8c33;
+}
+.chat-modal-ai.open { display: flex; animation: slideUp 0.4s cubic-bezier(0.4,0,0.2,1); }
+.chat-header-ai {
+  background: linear-gradient(135deg, #d297ff, #d297ff);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chat-header-ai h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.close-btn-ai {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  backdrop-filter: blur(10px);
+}
+.close-btn-ai:hover { background: rgba(255,255,255,0.2); transform: scale(1.1); }
+.close-btn-ai:active { transform: scale(0.95); }
+.chat-body-ai { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.messages-container-ai { flex: 1; overflow-y: auto; padding: 16px; background: linear-gradient(to bottom, #181818, #232323); }
+.message-bubble-ai, .ai-bubble-ai {
+  max-width: 85%; padding: 12px 16px; margin: 8px 0; border-radius: 18px; word-wrap: break-word; font-size: 14px; line-height: 1.5;
+}
+.message-bubble-ai { background: linear-gradient(135deg, #7F77DD, #5b4fcf); color: white; margin-left: auto; margin-right: 0; border-bottom-right-radius: 6px; box-shadow: 0 2px 8px rgba(127,119,221,0.18); }
+.ai-bubble-ai { background: white; color: #374151; margin-left: 0; margin-right: auto; border-bottom-left-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #f3f4f6; }
+.timestamp-ai { font-size: 10px; opacity: 0.7; margin-top: 4px; display: block; }
+.typing-indicator-ai { background: white; color: #ea8c33; padding: 12px 16px; border-radius: 18px; border-bottom-left-radius: 6px; font-style: italic; font-size: 13px; max-width: 85%; margin: 8px 0; animation: pulse 1.5s infinite; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #f3f4f6; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes pulse { 0%,100%{opacity:0.7;} 50%{opacity:1;} }
+.input-container-ai { padding: 20px; background: #181818; border-top: 1px solid #232323; display: flex; align-items: center; gap: 12px; }
+.message-input-ai { flex: 1; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 20px; outline: none; font-size: 14px; background: #232323; color: white; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); font-family: inherit; }
+.message-input-ai:focus { border-color: #be81ff; background: #232323; box-shadow: 0 0 0 3px rgba(234,140,51,0.1); }
+.message-input-ai::placeholder { color: #94a3b8; }
+</style>
+<div class="chat-modal-ai" id="chatModalAI">
+  <div class="chat-header-ai">
+    <h3>AI Chatbot</h3>
+    <button class="close-btn-ai" id="closeChatAI">×</button>
+  </div>
+  <div class="chat-body-ai">
+    <div class="messages-container-ai" id="messagesContainerAI">
+      <div class="ai-bubble-ai">Hi! I am your AI Chatbot. Ask me anything about support, recovery, or resources.</div>
+    </div>
+    <div class="input-container-ai">
+      <input type="text" id="messageInputAI" class="message-input-ai" placeholder="Type your question..." maxlength="500">
+    </div>
+  </div>
+</div>
+<script type="module">
+const chatModalAI = document.getElementById('chatModalAI');
+const closeChatAI = document.getElementById('closeChatAI');
+const messageInputAI = document.getElementById('messageInputAI');
+const messagesContainerAI = document.getElementById('messagesContainerAI');
+let aiOpen = false;
+
+// (No click-to-open for AI node; handled by E key)
+closeChatAI.addEventListener('click', function() {
+  chatModalAI.classList.remove('open');
+  aiOpen = false;
+});
+
+function getCurrentTimeAI() {
+  const now = new Date();
+  return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function addMessageToChatAI(message, isAI = false) {
+  const messageElement = document.createElement('div');
+  messageElement.classList.add(isAI ? 'ai-bubble-ai' : 'message-bubble-ai');
+  const messageText = document.createElement('div');
+  messageText.textContent = message;
+  const timestamp = document.createElement('span');
+  timestamp.classList.add('timestamp-ai');
+  timestamp.textContent = getCurrentTimeAI();
+  messageElement.appendChild(messageText);
+  messageElement.appendChild(timestamp);
+  messagesContainerAI.appendChild(messageElement);
+  messagesContainerAI.scrollTop = messagesContainerAI.scrollHeight;
+}
+function showTypingIndicatorAI() {
+  const typingIndicator = document.createElement('div');
+  typingIndicator.classList.add('typing-indicator-ai');
+  typingIndicator.id = 'typingIndicatorAI';
+  typingIndicator.textContent = 'AI is typing...';
+  messagesContainerAI.appendChild(typingIndicator);
+  messagesContainerAI.scrollTop = messagesContainerAI.scrollHeight;
+  return typingIndicator;
+}
+function hideTypingIndicatorAI(indicator) {
+  if (indicator && indicator.parentNode) {
+    indicator.parentNode.removeChild(indicator);
+  }
+}
+async function sendToGeminiAPI_AI(userMessage) {
+  const response = await fetch('https://flaskandfurious.opencodingsociety.com/api/gemini-chat/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message: userMessage })
+  });
+  if (!response.ok) throw new Error(`Server error: ${response.status}`);
+  const data = await response.json();
+  if (data.error) throw new Error(data.error);
+  return data.reply;
+}
+messageInputAI.addEventListener('keypress', async function(event) {
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault();
+    const userMessage = event.target.value.trim();
+    if (!userMessage) return;
+    addMessageToChatAI(userMessage);
+    event.target.value = '';
+    const typingIndicator = showTypingIndicatorAI();
+    try {
+      const aiResponse = await sendToGeminiAPI_AI(userMessage);
+      hideTypingIndicatorAI(typingIndicator);
+      setTimeout(() => { addMessageToChatAI(aiResponse, true); }, 500);
+    } catch (error) {
+      hideTypingIndicatorAI(typingIndicator);
+      addMessageToChatAI("Sorry, I encountered an error. Please try again.", true);
+    }
+  }
+});
+</script>
+
+</div>
+</body>
+</html>

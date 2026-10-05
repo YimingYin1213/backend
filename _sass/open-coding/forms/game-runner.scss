@@ -1,0 +1,105 @@
+/**
+ * Game Runner Styles
+ * Interactive game development environment with GameEngine integration
+ */
+
+@import "runner-base";
+@import "../mixins/panel";
+
+.game-runner-container {
+  @include runner-base;
+
+  // Game output area - contained canvas for educational use
+  .game-output {
+    // Layout & Dimensions
+    min-height: 400px;
+    max-height: 600px;
+    overflow: hidden;
+    position: relative;
+    
+    // Spacing
+    padding: 0;
+    
+    // Colors & Styling
+    background: #000; // Black background for game
+    color: $panel-text;
+    
+    // Game container styling
+    .gameContainer {
+      width: 100%;
+      height: 580px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      
+      // Only style the main canvas, not character canvases
+      > canvas#gameCanvas {
+        display: block;
+        width: 100% !important;
+        height: 580px !important;
+        border: none;
+        background: transparent;
+      }
+      
+      // Reset styles for all game-generated canvases
+      canvas {
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+    }
+  }
+
+  // Level selector dropdown
+  .levelSelect {
+    @include select-control();
+    min-width: 120px;
+  }
+
+  // Game-specific buttons - using element classes for semantic colors
+  .pauseBtn,
+  .stopBtn,
+  .resetBtn {
+    @include icon-button(38px, 0);
+  }
+
+  // Pause button - warning color (yellow) for attention
+  .pauseBtn {
+    @extend .warning-button;
+
+    &:disabled {
+      background: var(--pref-bg-color) !important;
+      border-color: var(--ui-border) !important;
+      color: var(--pref-text-color) !important;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Stop button - danger color (red) for critical action
+  .stopBtn {
+    @extend .danger-button;
+
+    &:disabled {
+      background: var(--pref-bg-color) !important;
+      border-color: var(--ui-border) !important;
+      color: var(--pref-text-color) !important;
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // Game status indicator
+  .game-status {
+    font-weight: 500;
+    
+    .status-text {
+      color: var(--pref-accent-color);
+      font-weight: 600;
+    }
+  }
+}

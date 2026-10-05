@@ -1,0 +1,8 @@
+.glass {
+    backdrop-filter: blur(30px);
+}
+
+.tintedGlass {
+    @extend .glass;
+    background: rgba(37, 0, 63, 0.8);
+}

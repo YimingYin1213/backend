@@ -1,0 +1,36 @@
+# Dynamic Event Calendar Capstone Infographic
+Title: "Dynamic Event Calendar"
+Description: "A suite of interactive web tools built for Safe Passage Heals — centralizing community events, visualizing personal water usage, and delivering personalized water insights in one place."
+
+Topics:
+  - title: "Dynamic Event Calendar"
+    image: "capstone/dynamic_event_calendar.png"
+    animation: "safepassageheals/images/Login.mp4"
+    animation2: "safepassageheals/images/events.mp4"
+    animation3: "safepassageheals/images/Calendar.mp4"
+    animation4: "safepassageheals/images/Recovery.mp4"
+    animation5: "safepassageheals/images/Beforeevents.mp4"
+    link: "/capstone/dynamiceventcalendar/"
+    alt: "Dynamic Event Calendar — Interactive Community Events for Safe Passage Heals"
+    keyPoints:
+      - "Interactive calendar shows all upcoming Safe Passage Heals events in one place, replacing scattered posts with a centralized view"
+      - "Click any event to view details, including flyer, description, time, and a direct registration link"
+      - "Built with a Flask REST API and SQLite database to dynamically manage and display event data"
+    description: "Safe Passage Heals hosts workshops, support groups, and community events for survivors of domestic violence. Previously, event info was scattered across posts and flyers, making it hard to find. The Dynamic Event Calendar centralizes all events in an interactive monthly view where users can click events to view details, flyers, and registration links. It is built with FullCalendar.js on the frontend and a Flask + SQLite backend using a REST API."
+    tech:
+      - "HTML / CSS / JavaScript"
+      - "FullCalendar.js"
+      - "Flask REST API"
+      - "SQLite Database"
+      - "GitHub Pages Deployment"
+    impact:
+      - "Centralizes all upcoming events in one interactive interface"
+      - "Removes the need to search multiple pages for event information"
+      - "Enables one-click event registration"
+      - "Creates a more organized and engaging user experience"
+      - "Increases event visibility and community participation for Safe Passage Heals"
+    status: "In Development"
+    team:
+      - "Ruchika Kench"
+      - "Akshara Shankar"
+      - "Avantika Chittari"

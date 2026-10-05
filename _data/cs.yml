@@ -1,0 +1,54 @@
+# course illustrations
+introduction_tools: &introduction_tools |
+    +-----------------+
+    | Laptop, OS      |
+    | Tool Setup      | 
+    +-----------------+
+       |
+       | VS Code, Markdown, Jupyter Notebook, JavaScript (.md, .html)
+       v
+    +-----------------+
+    | VS Code, Develop|
+    | Code Editor     | 
+    +-----------------+
+       |
+       | Write code, make, run localhost, test, debug
+       v
+    +-----------------+
+    | VS Code, Git    |
+    | Version Control |       | 
+    +-----------------+
+       |
+       | Commit local versions, comment, show changes, reset branch
+       v
+    +-----------------+
+    | VS Code, Project|
+    | GitHub Sync     |
+    +-----------------+
+       |
+       | Push changes to GitHub cloud Repository (repo
+       v
+    +-----------------+
+    | GitHub,  Collab |
+    | Shared Code     |
+    +-----------------+
+       |
+       | Tracking GitHub pages Actions, understanding Jekyll build files
+       v
+    +-----------------+
+    | GitHub Pages    | ->  Highlight languages, coding, and course skills, with Awesome Style
+    | Showcase Project| ->  Share project with the world
+    +-----------------+
+
+Onboarding: 
+  title: SDLC & Dev Tools
+  description: By the end of this onboarding sprint, students will be able to operate effectively within a modern software development environment and articulate how their work fits into the Software Development Life Cycle (SDLC). Students will set up and use core development tools (Linux, VSCode, GitHub), collaborate using industry-standard workflows, and iteratively build and document a personal portfolio site. Through hands-on practice with Markdown, HTML, CSS, and JavaScript in a Jekyll-based workflow, students will develop sustainable development habits—embracing iteration, version control, documentation, pair programming, and responsible AI usage—while prioritizing breadth of SDLC understanding over depth of implementation.
+  illustration: *introduction_tools
+  mermaid_figure: |
+    flowchart TD
+      A[Laptop, OS<br>Tool Setup] --> B[VS Code, Markdown, Jupyter, JS]
+      B --> C[VS Code, Develop<br>Code Editor]
+      C --> D[VS Code, Git<br>Version Control]
+      D --> E[VS Code, Project<br>GitHub Sync]
+      E --> F[GitHub, Collab<br>Shared Code]
+      F --> G[GitHub Pages<br>Showcase Project]
