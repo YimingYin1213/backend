@@ -8,7 +8,7 @@
 - **Impact**: Backend lesson now saves to the correct localStorage keys
 
 ### 2. Button Visibility (FIXED)
-- **Problem**: "Mark as Complete" button was being appended to page content, making it invisible/lost
+- **Problem**: "Mark as Complete" button was being appended to page content, which was making it invisible/lost
 - **Fix**: Changed to a floating fixed button at bottom-right of the screen
 - **Impact**: Button is now always visible and clickable
 
