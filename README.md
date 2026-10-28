@@ -35,9 +35,9 @@ Use this project to create a Flask Server.
 - Open a Terminal, clone a project and `cd` into the project directory.  Use a `different link` and name for `name` for clone to match your repo.
 
 ```bash
-mkdir -p ~/openccs; cd ~/opencs
+mkdir -p ~/opencs; cd ~/opencs
 
-git clone https://github.com/open-coding-ocietyflask.git
+git clone https://github.com/open-coding-society/flask.git flask
 
 cd flask
 ```
@@ -45,7 +45,7 @@ cd flask
 - Install python dependencies for Flask, etc.
 
 ```bash
-python -m venv venv
+python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -91,8 +91,10 @@ pip install -r requirements.txt
   USER_PASSWORD='123Grace!'
   USER_PFP='hop.png'
   # Convience user defaults
-  MY_NAME='John Mortensen'
-  MY_UID='jm1021'
+   MY_NAME='Your Name'
+   MY_UID='yourid'
+   MY_PASSWORD='YourPassword123!'
+  MY_PFP='default.png'
   MY_ROLE='admin'
   # Obtain key, [Google AI Studio](https://aistudio.google.com/api-keys)
   GEMINI_API_KEY=xxxxx
@@ -115,9 +117,9 @@ pip install -r requirements.txt
 
   - Make the database and init data.
   
-  ```bash
-  ./scripts/db_init.py
-  ```
+   ```bash
+   ./scripts/db_init.py
+   ```
 
   - Explore newly created SQL database
     - Be sure to install SQLite3 Editor from VSCode Marketplace
