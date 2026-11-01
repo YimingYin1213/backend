@@ -39,6 +39,8 @@ allowed_origins = [
     'http://127.0.0.1:4600',
     'http://localhost:4000',
     'http://127.0.0.1:4000',
+    # Personal GitHub Pages frontend
+    'https://yimingyin1213.github.io',
     'https://open-coding-society.github.io',
     # Regex pattern to match any subdomain of opencodingsociety.com
     r'https://.*\.opencodingsociety\.com',
