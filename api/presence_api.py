@@ -7,6 +7,8 @@ be a classroom, a club meeting, or an event.
 Devices authenticate with the shared X-API-Key (RFID_API_KEY), the same
 device-to-server pattern as /api/rfid/scan, which is a thin wrapper around
 record_event() below. Admin/Teacher actions use the normal OCS login.
+Any logged-in person can enroll themselves in one period of a room
+(/enroll, see PresenceEnroll).
 
 RFID tap body:
     {
@@ -45,24 +47,26 @@ import os
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request
 from flask_restful import Api, Resource
 from sqlalchemy.exc import IntegrityError
 
 from __init__ import db
 from api.authorize import token_required
-from model.presence import (CameraCheck, PresenceEvent, PresencePeriod, PresenceRoom,
-                            presence_room_members, to_iso_z, utc_now)
+from model import account_types
+from model.presence import (CameraCheck, PresenceEvent, PresencePeriod, PresenceRoom, membership_period,
+                            membership_rows, period_names, presence_room_members, remove_membership,
+                            set_membership, to_iso_z, utc_now)
 from model.presence_schedule import (PresenceSchedule, PresenceScheduleOverride, ScheduleError,
                                      check_timezone, parse_date, scheduled_block_at)
-from model.rfid_tag import RfidTag
+from model.rfid_tag import RfidCardClaim, RfidTag
 from model.user import User
 
 presence_api = Blueprint('presence_api', __name__, url_prefix='/api/presence')
 api = Api(presence_api)
 
 DEVICE_API_KEY = os.environ.get("RFID_API_KEY", "")
-STAFF = ["Admin", "Teacher"]
+STAFF = account_types.staff_roles()
 SOURCES = {"rfid", "camera"}
 SUPPORTED_SOURCES = {"rfid"}  # taps; camera results go through record_camera_result()
 # A device clock running ahead of the server by more than this is treated
@@ -158,6 +162,22 @@ def get_user(uid):
     return user
 
 
+def check_period(room, period_name, allow_all):
+    """period_name if it is one of the room's periods (see period_names), or
+    None for every period. allow_all lets staff choose every period in any
+    room; a student may only when the room has no schedule, so they cannot
+    land on every period's roster by leaving the period out."""
+    names = period_names(room)
+    period_name = str(period_name).strip() if period_name is not None else ""
+    if not period_name:
+        if allow_all or not names:
+            return None
+        raise PresenceError(f"period_name required; room {room.id} has periods", 400, periods=names)
+    if period_name not in names:
+        raise PresenceError(f"{period_name!r} is not a period of room {room.id}", 400, periods=names)
+    return period_name
+
+
 def parse_occurred_at(value):
     """ISO 8601 with a timezone -> naive UTC. Naive timestamps are rejected
     since there is no way to know what zone the device meant."""
@@ -251,6 +271,33 @@ def resolve_user(source, data):
     return get_user(uid), None
 
 
+def claim_unregistered_tag(room, tag_uid, now):
+    """Self-registration (see /api/rfid/claims): links an unregistered card
+    tapped at this room's reader to the one person with an open claim there.
+    Returns a response dict, or None when nobody is registering (the tap is
+    then rejected as unregistered). Two open claims at once is a conflict:
+    nobody gets the card and both are asked to try again."""
+    claims = [c for c in RfidCardClaim.query.filter_by(_room_id=room.id, _status="open").all() if c.is_open(now)]
+    if not claims:
+        return None
+    if len(claims) > 1:
+        for claim in claims:
+            claim.status = "conflict"
+        db.session.commit()
+        raise PresenceError("more than one person is registering a card at this reader; try again one at a time",
+                            409, status="claim_conflict")
+    claim = claims[0]
+    if RfidTag.query.filter_by(_user_id=claim.user_id).first():
+        claim.status = "cancelled"  # they got a card some other way since opening the claim
+        db.session.commit()
+        return None
+    db.session.add(RfidTag(tag_uid=tag_uid, user_id=claim.user_id))
+    claim.status, claim.tag_uid = "registered", tag_uid
+    db.session.commit()
+    return {"status": "card_registered", "uid": claim.user.uid, "user_name": claim.user.name,
+            "message": f"card registered to {claim.user.name}"}
+
+
 def record_event(data):
     """Validates, de-duplicates, and stores one presence event. Returns
     (response_dict, http_status). Raises PresenceError on bad input."""
@@ -275,7 +322,15 @@ def record_event(data):
         occurred_at = received_at
         adjusted = True
 
-    user, tag_uid = resolve_user(source, data)
+    try:
+        user, tag_uid = resolve_user(source, data)
+    except PresenceError as e:
+        # An unregistered card may be someone registering it right now.
+        if source == "rfid" and e.extra.get("status") == "unregistered":
+            claimed = claim_unregistered_tag(room, str(data.get("tag_uid")).strip(), received_at)
+            if claimed:
+                return claimed, 200
+        raise
 
     period = period_at(room, occurred_at)
     if period:
@@ -425,9 +480,13 @@ def compute_state(events, period, now):
 
 
 def room_status(room):
-    """Each person's current state for the room's current period. The roster
-    is the room's members plus anyone who has ever produced a presence event
-    in the room (so tagged people show up before membership is set up)."""
+    """Each person's current state for the room's current period. In a
+    scheduled period the roster is the members enrolled in that period (by
+    name) plus every-period members; a manual period (a demo, an event) shows
+    every member. Anyone who has ever produced a presence event in the room
+    and is not a member is added too (so tagged people show up before
+    membership is set up); an enrolled student is not, so they only appear in
+    their own period."""
     now = utc_now()
     period = current_period(room, now)
     body = {
@@ -439,13 +498,15 @@ def room_status(room):
     if not period:
         return body
 
-    members = {u.id: u for u in room.members}
+    rows = membership_rows(room)
+    period_of = {u.id: p for u, p in rows}
+    members = {u.id: u for u, p in rows if period.source == "manual" or p is None or p == period.name}
     seen_ids = {
         row[0]
         for row in db.session.query(PresenceEvent._user_id).filter(PresenceEvent._room_id == room.id).distinct()
     }
     roster = dict(members)
-    missing = seen_ids - roster.keys()
+    missing = seen_ids - period_of.keys()
     if missing:
         roster.update({u.id: u for u in User.query.filter(User.id.in_(missing))})
 
@@ -478,6 +539,7 @@ def room_status(room):
             # Camera verification of the person's most recent tap.
             "verification": tap_verification(last, checks_by_tap.get(last.id), now) if last else None,
             "member": user.id in members,
+            "period_name": period_of.get(user.id),
         })
     return body
 
@@ -501,10 +563,14 @@ def apply_room_fields(room, data):
         if not isinstance(data["member_uids"], list):
             raise PresenceError("member_uids must be a list of uids")
         users = [get_user(uid) for uid in data["member_uids"]]
-        for user in room.members.all():
-            room.members.remove(user)
+        # Only the difference changes, so members who stay keep their period.
+        keep = {user.id for user in users}
+        for user, _ in membership_rows(room):
+            if user.id not in keep:
+                remove_membership(room, user)
         for user in users:
-            room.members.append(user)
+            if not membership_period(room, user)[0]:
+                set_membership(room, user, None)
 
 
 class PresenceAPI:
@@ -593,18 +659,23 @@ class PresenceAPI:
     class _RoomMember(PresenceResource):
         @token_required(STAFF)
         def post(self, room_id, uid):
+            """Adds a member: optional {period_name} (null or left out = every
+            period). Posting an existing member with period_name changes it;
+            without one, their period is left as it is."""
             room, user = get_room(room_id), get_user(uid)
-            if not room.members.filter(User.id == user.id).first():
-                room.members.append(user)
+            data = request.get_json(silent=True) or {}
+            if not isinstance(data, dict):
+                raise PresenceError("body must be a JSON object, e.g. {\"period_name\": \"Period 3\"}")
+            if "period_name" in data or not membership_period(room, user)[0]:
+                set_membership(room, user, check_period(room, data.get("period_name"), allow_all=True))
                 db.session.commit()
             return room.to_dict()
 
         @token_required(STAFF)
         def delete(self, room_id, uid):
             room, user = get_room(room_id), get_user(uid)
-            if room.members.filter(User.id == user.id).first():
-                room.members.remove(user)
-                db.session.commit()
+            remove_membership(room, user)
+            db.session.commit()
             return room.to_dict()
 
     class _RoomPeriods(PresenceResource):
@@ -760,6 +831,66 @@ class PresenceAPI:
     api.add_resource(_Overrides, '/schedules/overrides')
     api.add_resource(_Override, '/schedules/overrides/<int:override_id>')
     api.add_resource(_Schedule, '/schedules/<int:schedule_id>')
+
+
+# ---------------------------------------------------------------- enrollment
+
+def my_enrollments(user):
+    """The logged-in person's own memberships, for /enroll/me. Only their own
+    rows, so a student never sees who else is in a room."""
+    rows = (db.session.query(PresenceRoom, presence_room_members.c.period_name)
+            .join(presence_room_members, presence_room_members.c.room_id == PresenceRoom.id)
+            .filter(presence_room_members.c.user_id == user.id)
+            .order_by(PresenceRoom._name)
+            .all())
+    return {
+        "uid": user.uid,
+        "name": user.name,
+        "enrollments": [{"room_id": room.id, "room": room.name, "period_name": period_name}
+                        for room, period_name in rows],
+    }
+
+
+class PresenceEnroll:
+    """Self-enrollment: any logged-in person picks a room and one of its
+    periods, and then shows on that room's roster during that period (see
+    room_status). Staff manage everyone else through /rooms/<id>/members."""
+
+    class _EnrollRooms(PresenceResource):
+        @token_required()
+        def get(self):
+            """Rooms to enroll in, with their period names. No member data."""
+            return [{"id": room.id, "name": room.name, "periods": period_names(room)}
+                    for room in PresenceRoom.query.order_by(PresenceRoom._name).all()]
+
+    class _EnrollMe(PresenceResource):
+        @token_required()
+        def get(self):
+            return my_enrollments(g.current_user)
+
+        @token_required()
+        def put(self):
+            """Enroll in a room's period: {room_id, period_name}. Enrolling in
+            the same room again switches the period. period_name may be null
+            only in a room without a schedule (every period)."""
+            user, data = g.current_user, json_body()
+            room = get_room(data.get("room_id"))
+            set_membership(room, user, check_period(room, data.get("period_name"), allow_all=False))
+            db.session.commit()
+            return my_enrollments(user)
+
+    class _EnrollMeRoom(PresenceResource):
+        @token_required()
+        def delete(self, room_id):
+            """Leave a room. Leaving one you are not in changes nothing."""
+            user = g.current_user
+            remove_membership(get_room(room_id), user)
+            db.session.commit()
+            return my_enrollments(user)
+
+    api.add_resource(_EnrollRooms, '/enroll/rooms')
+    api.add_resource(_EnrollMe, '/enroll/me')
+    api.add_resource(_EnrollMeRoom, '/enroll/me/<int:room_id>')
 
 
 def _grace(data):

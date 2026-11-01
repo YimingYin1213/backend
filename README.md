@@ -173,6 +173,24 @@ requests prompt for the `RFID_API_KEY`; keep it out of the file. A fresh
 database needs `db.create_all()` (or `./scripts/db_init.py` locally), and
 `seed_schedules()` loads the starter schedule from `model/presence_schedules.json`.
 
+People can register their own card (steps 22-26): a logged-in user opens a
+60-second claim for a room's reader (`POST /api/rfid/claims`), then taps a new
+card there, and the scan links it to them. If two people are registering at the
+same reader at once, nobody gets the card and both try again, so a card is never
+linked to the wrong person. Self-service is one card per person; replacing or
+removing a card stays with Teachers and Admins (`/api/rfid/tags`).
+
+Students enroll themselves in a room and one of its periods (steps 27-45): a
+logged-in user lists rooms with their periods (`GET /api/presence/enroll/rooms`),
+then picks one (`PUT /api/presence/enroll/me` with `{room_id, period_name}`).
+A room's periods are the block names of its schedule, so "Period 1" is one
+period even though it runs at different times on Wednesdays. During a scheduled
+period the room's status lists only the students enrolled in it, plus members
+Teachers and Admins added for every period; a manually started period (a demo)
+lists every member. Enrolling in the same room again switches the period, and
+`DELETE /api/presence/enroll/me/<room_id>` leaves it. A room without a schedule
+takes `"period_name": null`, meaning every period.
+
 #### Manual user CRUD sequence
 
 Open [api/user_crud.http](api/user_crud.http) and set `testUid` to a disposable,
@@ -241,6 +259,17 @@ HTTPYac is needed for that.
 | GET | `/api/microblog/page/<page_key>` | Get posts for specific page |
 | POST | `/api/microblog/topics/auto-create` | Auto-create topic for page |
 | GET | `/api/microblog/topics?pagePath=X` | Get topic by page path |
+
+### Feedback Operations
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/feedback/` | Save feedback and open a `[User Feedback]` issue on Open-Coding-Society/pages |
+| GET | `/api/feedback/all` | All feedback, newest first |
+| GET | `/api/feedback/user/<uid>` | One user's feedback with each GitHub issue's Open/Closed state |
+
+**Duplicate submissions:** a POST with the same `title`, `body` and `uid` as feedback saved
+within the last minute (`DUPLICATE_WINDOW` in `model/feedback.py`) returns that saved feedback
+and opens no new GitHub issue. Double clicks used to open one issue per click.
 
 ## Idea
 
@@ -357,14 +386,24 @@ safe, and it is the only order in which the pull can verify itself.
    transfer. Keep your local copy until it reports a clean reconciliation -- until then
    your local database is the only complete copy of that data.
 
-### When the change only adds tables or columns: `db_upgrade.py`
+### Which path? Run `db_upgrade.py --check` first
 
-Most schema changes only add a model or a column. For those, skip the wipe-and-reload
-above: `scripts/db_upgrade.py` creates missing tables and adds missing columns in place,
-and touches nothing else.
+After every deploy, `scripts/db_upgrade.py --check` compares the models with the live
+database and says which path the change needs, so nobody has to work it out:
+
+- **Up to date** (exit 0): nothing to do.
+- **In place** (exit 2): run `db_upgrade.py` without `--check`. It creates missing tables
+  and adds missing columns, and touches nothing else. Most changes are this one.
+- **Rebuild needed** (exit 3): it names the column and why, changes nothing, and prints
+  the full workflow above (pull, `db_init.py`, restore).
+
+Both paths share their steps in `scripts/db_schema.py`: the same comparison, the same
+rollback point, and the same check afterwards that the database matches the models. Only
+the change itself differs (`ALTER TABLE` vs. drop and reload). `db_init.py` also prints a
+note when the in-place upgrade would have been enough.
 
 ```bash
-python scripts/db_upgrade.py --check                 # prints the SQL; exit 2 = changes to make
+python scripts/db_upgrade.py --check                 # which path; prints the SQL
 python scripts/db_upgrade.py                         # backup, ALTER TABLE, create_all(), re-count every table
 python scripts/db_upgrade.py --fill users.active=1   # existing rows get 1, new rows the model default
 ```
@@ -375,15 +414,15 @@ get NULL or that default. When they need something else, such as keeping current
 active while new ones start inactive, pass `--fill table.column=value`. `--fill` also lets
 a NOT NULL column with no fixed default (e.g. `default=datetime.utcnow`) be added.
 
-It refuses, and changes nothing, when a missing column is a primary key, unique, a foreign
-key, or NOT NULL with no fixed default and no `--fill`. Use the full workflow above for
-those. Tables and columns the models no longer use are listed and left in place.
+A missing column that is a primary key, unique, a foreign key, or NOT NULL with no fixed
+default and no `--fill` needs the rebuild. Tables and columns the models no longer use are listed and left in place.
 
 On production the web container has no `mysqldump`, so take the dump on the host first and
 pass it in with `--backup-file`; the exact commands are in the migration runbook. A new
 column on an existing table breaks every query of that table until it exists, so run the
 upgrade right after `docker compose up -d --build`, with the dump already taken.
-`python scripts/verify_db_upgrade.py` checks all of this on a throwaway database.
+`python scripts/verify_db_upgrade.py` checks all of this on a throwaway database, for both
+paths, so the rarely used rebuild is tested every time the common one is.
 
 ### Tables covered by the migration
 
@@ -397,7 +436,9 @@ The presence system's tables travel together as one `presence` bundle
 `presence_schedule_overrides`, `presence_rooms` (with `presence_room_members`),
 `rfid_tags`, `presence_periods`, `presence_events`, and `camera_checks`. Rows are matched
 by uid, room and schedule name, and event id, so a rebuild with new ids keeps every
-tag, period, and tap.
+tag, period, and tap. Each room exports `members` (uid and `period_name`) next to
+`member_uids`; an older export with only `member_uids` imports them for every period. `rfid_card_claims` is deliberately not migrated: a claim lives
+for 60 seconds (see below), so there is nothing to keep across a rebuild.
 
 **Adding a new model?** It must be added in three places or its data is lost on the next
 migration: `MIGRATED_MODELS` plus export/import endpoints in
