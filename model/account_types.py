@@ -30,6 +30,14 @@ Each account type has:
   email_required           optional, true by default. The sign-up form requires an email.
   spring_account           optional, true by default. The sign-up form also creates a Spring account.
   The sign-up form also verifies with Google first when the type has google_verified_domains.
+  google_signin_domains    optional, with google_verified_domains. The email domains the form accepts at that
+                           Google step, when more than the ones that activate the account at once (an email in
+                           the others is accepted and the account waits for a Teacher/Admin). Without it, the
+                           form accepts the google_verified_domains.
+  google_prompt            optional, with google_verified_domains. What the form says at the Google step.
+  spring_role              optional. The role Spring is told these accounts have, at login (see model/role_attestation.py):
+                           granted while the account is active, taken away when it is not. A name like ROLE_MENTOR, and
+                           never an Admin or Teacher role.
   allowed_requests         optional. When present the account can only make these requests, written
                            "METHOD /path" (for example "GET /api/id"), and is refused everything else.
 verification_interval_days is how long a verification stays current, and the most a Teacher/Admin
@@ -75,11 +83,26 @@ def _check(data):
         for flag in ("github_check", "active_on_signup", "requires_open_window", "asks_school", "email_required", "spring_account"):
             if flag in account_type and not isinstance(account_type[flag], bool):
                 raise ValueError(f"account_types.json: {name}.{flag} must be true or false")
+        if "spring_role" in account_type:
+            spring_role = account_type["spring_role"]
+            if not (isinstance(spring_role, str) and re.fullmatch(r"ROLE_[A-Z]+(_[A-Z]+)*", spring_role)):
+                raise ValueError(f"account_types.json: {name}.spring_role must be a role name such as ROLE_MENTOR")
+            if spring_role in ("ROLE_ADMIN", "ROLE_TEACHER") or account_type["role"] in privileged:
+                raise ValueError(f"account_types.json: {name}.spring_role cannot give Spring an Admin or Teacher role")
         for key in ("lifetime_hours", "window_max_minutes", "requests_per_minute"):
             number = account_type.get(key)
             if key in account_type and (not isinstance(number, int) or isinstance(number, bool) or number < 1):
                 raise ValueError(f"account_types.json: {name}.{key} must be a whole number, 1 or more")
-        for key in ("signup_label", "signup_note"):
+        verified = account_type.get("google_verified_domains") or []
+        signin = account_type.get("google_signin_domains")
+        if (signin is not None or "google_prompt" in account_type) and not verified:
+            raise ValueError(f"account_types.json: {name} has google_signin_domains or google_prompt but no google_verified_domains")
+        if signin is not None:
+            if not (isinstance(signin, list) and signin and all(isinstance(d, str) and d.strip() and "@" not in d for d in signin)):
+                raise ValueError(f"account_types.json: {name}.google_signin_domains must be a list of domains such as school.example, without an @")
+            if not set(verified) <= set(signin):
+                raise ValueError(f"account_types.json: {name}.google_signin_domains must include every google_verified_domains")
+        for key in ("signup_label", "signup_note", "google_prompt"):
             if key in account_type and (not isinstance(account_type[key], str) or not account_type[key].strip()):
                 raise ValueError(f"account_types.json: {name}.{key} must be text that is not blank")
         if account_type.get("requires_open_window") and "window_max_minutes" not in account_type:
@@ -235,6 +258,8 @@ def signup_types():
         "email_required": t.get("email_required", True),
         "spring_account": t.get("spring_account", True),
         "google_step": bool(t.get("google_verified_domains")),
+        "google_domains": list(t.get("google_signin_domains") or t.get("google_verified_domains") or []),
+        "google_prompt": t.get("google_prompt"),
         "requires_open_window": requires_open_window(t),
         "note": t.get("signup_note"),
     } for name, t in _data["account_types"].items() if "signup_label" in t]
@@ -242,3 +267,9 @@ def signup_types():
 
 def default_account_type_id():
     return _data["default_account_type"]
+
+
+def spring_role(role):
+    """The role Spring is told an account of this role has, or None."""
+    account_type = _type_for_role(role)
+    return account_type.get("spring_role") if account_type else None

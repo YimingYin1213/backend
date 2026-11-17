@@ -8,8 +8,9 @@ from flask_restful import Api, Resource # used for REST API building
 from datetime import datetime, timedelta
 from __init__ import app, db
 from api.authorize import token_required
+from api.request_body import json_object
 from model.user import User, meets_password_rule, WeakPasswordError
-from model import account_types, guest_window
+from model import account_types, guest_window, role_attestation
 from model.google_token import verified_google_email
 from model.github import GitHubUser
 import os
@@ -165,7 +166,7 @@ class UserAPI:
             """
             
             # Read data for json body
-            body = request.get_json()
+            body = json_object()
             
             # Debug logging
             #print(f"Received signup request with body: {body}")
@@ -340,7 +341,7 @@ class UserAPI:
             # Retrieve the current user from the token_required authentication check
             current_user = g.current_user
             # Read data from the JSON body of the request
-            body = request.get_json()
+            body = json_object()
 
             ''' Admin-specific update handling '''
             if current_user.is_admin():
@@ -379,7 +380,7 @@ class UserAPI:
             Returns:
                 JSON response with a success message or an error message.
             """
-            body = request.get_json()
+            body = json_object()
             uid = body.get('uid')
             
             """ User SQLAlchemy query returning a single user """
@@ -414,7 +415,7 @@ class UserAPI:
             current_user = g.current_user
             
             ''' Read data for json body '''
-            body = request.get_json()
+            body = json_object()
             
             ''' Error checking '''
             sections = body.get('sections')
@@ -433,7 +434,7 @@ class UserAPI:
             current_user = g.current_user
 
             ''' Read data for json body '''
-            body = request.get_json()
+            body = json_object()
 
             ''' Error checking '''
             section_data = body.get('section')
@@ -458,7 +459,7 @@ class UserAPI:
             current_user = g.current_user
     
             ''' Read data for json body '''
-            body = request.get_json()
+            body = json_object()
     
             ''' Error checking '''
             sections = body.get('sections')
@@ -472,8 +473,8 @@ class UserAPI:
             return {'message': f'Sections {sections} deleted successfully'}, 200
     class _Security(Resource):
         def post(self):
+            body = json_object()
             try:
-                body = request.get_json()
                 if not body:
                     return {
                         "message": "Please provide user details",
@@ -539,6 +540,10 @@ class UserAPI:
                                 "limited": account_types.allowed_requests(user.role) is not None
                             }
                         }
+                        # A statement Spring can check, so it can give a verified mentor ROLE_MENTOR (model/role_attestation.py)
+                        statement = role_attestation.issue(user)
+                        if statement:
+                            response_data["role_attestation"] = statement
                         resp = jsonify(response_data)
                         
                         # Set cookie
@@ -657,7 +662,7 @@ class UserAPI:
             Add or update grade data for a user.
             """
             current_user = g.current_user
-            body = request.get_json()
+            body = json_object()
             
             # Determine which user's grade data to update
             uid = body.get('uid')
@@ -710,7 +715,7 @@ class UserAPI:
             Add or update AP exam data for a user.
             """
             current_user = g.current_user
-            body = request.get_json()
+            body = json_object()
             
             # Determine which user's AP exam data to update
             uid = body.get('uid')
@@ -763,7 +768,7 @@ class UserAPI:
             Add or update school data for a user.
             """
             current_user = g.current_user
-            body = request.get_json()
+            body = json_object()
 
             # Determine which user's school data to update
             uid = body.get('uid')
@@ -803,7 +808,7 @@ class UserAPI:
                 JSON response with the created user details or an error message.
             """
             # Read data from json body
-            body = request.get_json()
+            body = json_object()
 
             # Validate uid (username)
             uid = body.get('uid')
@@ -864,7 +869,7 @@ class UserAPI:
         calling Spring's /reset/oauth/complete with the same token.
         """
         def post(self):
-            body = request.get_json(silent=True) or {}
+            body = json_object()
             uid = body.get('uid')
             reset_token = body.get('resetToken')
             password = body.get('newPassword')
@@ -964,7 +969,7 @@ class UserAPI:
         verification step as a self-created one."""
         @token_required(account_types.staff_roles())
         def post(self):
-            body = request.get_json(silent=True) or {}
+            body = json_object()
             allowed = account_types.staff_created()
             role = allowed.get((body.get('accountType') or '').lower())
             name, uid, password = body.get('name'), body.get('uid'), body.get('password')
@@ -1062,7 +1067,7 @@ class UserAPI:
         def post(self):
             """Add, remove, or clear classes from the user's class list based on action parameter."""
             current_user = g.current_user
-            body = request.get_json() or {}
+            body = json_object()
             uid = body.get('uid')
             if current_user.is_admin() and uid:
                 user = User.query.filter_by(_uid=uid).first()
@@ -1106,7 +1111,7 @@ class UserAPI:
         def put(self):
             """Replace the user's class list with the provided list."""
             current_user = g.current_user
-            body = request.get_json() or {}
+            body = json_object()
             uid = body.get('uid')
             if current_user.is_admin() and uid:
                 user = User.query.filter_by(_uid=uid).first()

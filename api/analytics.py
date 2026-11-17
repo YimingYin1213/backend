@@ -16,11 +16,13 @@ api = Api(analytics_api)
 
 
 def get_date_range(body):
+    body = body or {}
     start_date = body.get('start_date')
     end_date = body.get('end_date')
-    
+
     if not start_date or not end_date:
-        today = datetime.today()
+        # Compare whole days: a time of day past midnight on a trimester's last day must still match it
+        today = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
         year = today.year
 
         if datetime(year, 6, 15) <= today <= datetime(year, 11, 14):  # Trimester 1
@@ -162,6 +164,7 @@ class UserIssueComments(Resource):
             return {'message': str(e)}, 500
 
 class UserReceivedIssueComments(Resource):
+    @token_required()
     def get(self):
         try:
             current_user = g.current_user
