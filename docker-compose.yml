@@ -1,4 +1,3 @@
-version: '3'
 services:
   web:
     image: safepassage_flask
@@ -6,7 +5,15 @@ services:
     env_file:
       - .env # This file is optional; defaults will be used if it does not exist
     ports:
-      - "8302:8302"   # team port on the shared class server (must match Dockerfile + nginx)
+      - "8561:8302"   # assigned backend host port -> Gunicorn container port
     volumes:
       - ./instance:/app/instance
+    restart: unless-stopped
+
+  # The production code execution API calls this service over the private
+  # Compose network. It is intentionally not published on a host port.
+  code_runner:
+    build: ./runner
+    expose:
+      - "8591"
     restart: unless-stopped
