@@ -1,4 +1,10 @@
 {
+  "enforce": [
+    "anonymous",
+    "Guest",
+    "User",
+    "Mentor"
+  ],
   "public": [
     "GET /",
     "POST /api/authenticate",
